@@ -66,7 +66,7 @@ class Viewer extends Component {
 
   constructor(props) {
     super(props);
-
+    console.log('Viewer :: Constructor ')
     const { activeServer } = this.props;
     const server = Object.assign({}, activeServer);
 
@@ -441,6 +441,8 @@ export default withDialog(Viewer);
  * @returns {bool}
  */
 const _checkForDerivedDisplaySets = async function(displaySet, study) {
+  // require('log-timestamp');
+  // console.log('Viewer:: 444  --  _checkForDerivedDisplaySets')
   let derivedDisplaySetsNumber = 0;
   if (
     displaySet.Modality &&

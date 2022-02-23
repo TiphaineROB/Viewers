@@ -61,6 +61,9 @@ class StudyMetadata extends Metadata {
     });
     // Initialize Public Properties
     this._definePublicProperties();
+    this.state = {
+      referencedSeriesInstanceUID: [],
+    }
   }
 
   /**
@@ -98,6 +101,7 @@ class StudyMetadata extends Metadata {
    * @return {Array} Array of display set object
    */
   getDisplaySets() {
+    // console.log('StudyMetadata :: getDisplaySets  --   _displaySets  : ', this._displaySets)
     return this._displaySets.slice();
   }
 
@@ -108,6 +112,7 @@ class StudyMetadata extends Metadata {
    * @returns {Array} The list of display sets created for the given series object
    */
   _createDisplaySetsForSeries(sopClassHandlerModules, series) {
+    // console.log('_createDisplaySetsForSeries:: does this appears at the beginning ?')
     const study = this;
     const displaySets = [];
 
@@ -261,14 +266,22 @@ class StudyMetadata extends Metadata {
    */
   static getReferencedDisplaySet(derivatedDisplaySet, studies) {
     let allDisplaySets = [];
-
+    // console.log('StudyMetadata :: getReferencedDisplaySet   --  studies  : ', studies)
     studies.forEach(study => {
-      allDisplaySets = allDisplaySets.concat(study.displaySets);
+      let displaySets = [];
+      if (study.displaySets !== undefined) {
+        displaySets = study.displaySets;
+      }
+      else {
+        displaySets = study._data.displaySets
+      }
+      allDisplaySets = allDisplaySets.concat(displaySets);
     });
+
 
     const otherDisplaySets = allDisplaySets.filter(
       ds =>
-        ds.displaySetInstanceUID !== derivatedDisplaySet.displaySetInstanceUID
+        ds !== undefined && ds.displaySetInstanceUID !== derivatedDisplaySet.displaySetInstanceUID
     );
 
     const { metadata } = derivatedDisplaySet;
@@ -300,10 +313,15 @@ class StudyMetadata extends Metadata {
     const referencedSeriesAvailable =
       referencedSeriesInstanceUIDs && referencedSeriesInstanceUIDs.length !== 0;
     if (referencedSeriesAvailable) {
+      //console.log(referencedSeriesInstanceUIDs)
       const referencedDisplaySet = otherDisplaySets.find(ds =>
         referencedSeriesInstanceUIDs.includes(ds.SeriesInstanceUID)
       );
       return referencedDisplaySet;
+    }
+    else {
+      console.log('No referencedSeriesSequence found !')
+
     }
   }
 
@@ -331,6 +349,7 @@ class StudyMetadata extends Metadata {
     }
 
     if (referencedSeriesInstanceUID) {
+      // console.log("getDerivedDatasets:: calls getReferencedDisplaySet")
       filteredDerivedDisplaySets = filteredDerivedDisplaySets.filter(
         displaySet => {
           return (
@@ -550,9 +569,17 @@ class StudyMetadata extends Metadata {
    */
   findDisplaySet(callback) {
     if (Metadata.isValidCallback(callback)) {
-      return this._displaySets.find((displaySet, index) => {
-        return callback.call(null, displaySet, index);
-      });
+      // console.log('StudyMetadata :: findDisplaySet -- this._displaySets :', this._displaySets)
+      if (this._displaySets.length > 0) {
+        return this._displaySets.find((displaySet, index) => {
+          return callback.call(null, displaySet, index);
+        });
+      }
+      else {
+        return this._data.displaySets.find((displaySet, index) => {
+          return callback.call(null, displaySet, index);
+        });
+      }
     }
   }
 
@@ -733,6 +760,7 @@ class StudyMetadata extends Metadata {
    */
   getFirstImageId(displaySetInstanceUID) {
     try {
+      // console.log('StudyMetadata :: 747 --- displaySetInstanceUID   :    ', displaySetInstanceUID )
       const displaySet = this.findDisplaySet(
         displaySet => displaySet.displaySetInstanceUID === displaySetInstanceUID
       );
@@ -1145,4 +1173,40 @@ function _toArray(arrayOrObject) {
   return Array.isArray(arrayOrObject) ? arrayOrObject : [arrayOrObject];
 }
 
+// added -- not functional
+async function _findReferencedSeriesInstanceUIDsFromAsync(metadata, derivatedDisplaySet) {
+  // Create a DicomWeb Client to retrieve Instance metadata
+  const headers = DICOMWeb.getAuthorizationHeader();
+  const errorInterceptor = errorHandler.getHTTPErrorHandler();
+  const dicomWebClient = new dwc({
+    url: derivatedDisplaySet.wadoRoot,
+    headers,
+    errorInterceptor,
+    requestHooks: [getXHRRetryRequestHook()],
+  });
+
+  let studyUID = metadata.StudyInstanceUID;
+  let seriesUID = metadata.SeriesInstanceUID;
+  let sopUID = metadata.SOPInstanceUID;
+
+  try{
+    let results = await dicomWebClient.retrieveInstanceMetadata({
+      studyInstanceUID:  studyUID,
+      seriesInstanceUID:  seriesUID,
+      sopInstanceUID: sopUID,
+    })
+    let referencedSeriesSequences = results[0]['00081115'].Value;
+
+    let referencedSeriesInstanceUIDs = [];
+    referencedSeriesSequences.forEach(referencedSeriesSequence => {
+      referencedSeriesInstanceUIDs = referencedSeriesInstanceUIDs.concat(referencedSeriesSequence['0020000E'].Value)
+    });
+    //  this.setState({referencedSeriesInstanceUID: referencedSeriesInstanceUIDs});
+    resolve(referencedSeriesInstanceUIDs);
+
+  } catch {
+    console.log('_findReferencedSeriesInstanceUIDsFromAsync failed')
+  }
+
+}
 export { StudyMetadata };

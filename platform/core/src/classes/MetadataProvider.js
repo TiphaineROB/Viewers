@@ -37,7 +37,6 @@ class MetadataProvider {
     }
 
     // Check if dataset is already naturalized.
-
     let naturalizedDataset;
 
     if (dicomJSONDataset['SeriesInstanceUID'] === undefined) {
@@ -109,6 +108,7 @@ class MetadataProvider {
   }
 
   _getAndCacheInstanceFromStudy(series, SOPInstanceUID) {
+    // console.log('MetadataProvider:: _get&CacheInstanceFromStudy')
     let instance = series.instances.get(SOPInstanceUID);
 
     if (!instance) {
@@ -125,6 +125,8 @@ class MetadataProvider {
     if (instance.PhotometricInterpretation === 'PALETTE COLOR') {
       await fetchPaletteColorLookupTableData(instance, server);
     }
+    // console.log('MetadataProvider:: _checkBulkDataAndInlineBinaries')
+
   }
 
   _getInstance(imageId) {
@@ -463,6 +465,7 @@ class MetadataProvider {
   }
 
   _getUIDsFromImageID(imageId) {
+
     if (imageId.includes('wadors:')) {
       const strippedImageId = imageId.split('studies/')[1];
       const splitImageId = strippedImageId.split('/');

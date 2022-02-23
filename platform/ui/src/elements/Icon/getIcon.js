@@ -89,7 +89,15 @@ import youtube from './icons/youtube.svg';
 import eye from './icons/eye.svg';
 import eyeClosed from './icons/eye-closed.svg';
 import envelopeSquare from './icons/envelope-square.svg';
-
+// import circleArrowDown from './icons/circle-arrow-down.svg';
+// import circleArrowUpSolid from './icons/circle-arrow-up-solid.svg';
+// import circleChevronDownSolid from './icons/circle-chevron-down-solid.svg';
+// import circleChevronUpSolid from './icons/circle-chevron-up-solid.svg';
+// 'envelope-square': envelopeSquare,
+// 'circle-arrow-up': circleArrowUpSolid,
+// 'circle-arrow-down': circleArrowDownSolid,
+// 'circle-chevron-up': circleChevronDownSolid,
+// 'circle-chevron-down': circleChevronUpSolid,
 const ICONS = {
   eye,
   'eye-closed': eyeClosed,
@@ -178,8 +186,7 @@ const ICONS = {
   'soft-tissue': softTissue,
   lung,
   liver,
-  save: saveRegular,
-  'envelope-square': envelopeSquare,
+  save: saveRegular
 };
 
 /**

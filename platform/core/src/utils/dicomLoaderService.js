@@ -70,7 +70,6 @@ const wadorsRetriever = (
     requestHooks: [getXHRRetryRequestHook()],
   };
   const dicomWeb = new api.DICOMwebClient(config);
-
   return dicomWeb.retrieveInstance({
     studyInstanceUID,
     seriesInstanceUID,

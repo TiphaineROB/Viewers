@@ -24,7 +24,6 @@ const SegmentItem = ({
   onClick,
   itemClass,
   color,
-  labelmap3D,
   visible,
   onVisibilityChange,
 }) => {
@@ -40,7 +39,7 @@ const SegmentItem = ({
     event.stopPropagation();
     const newVisibility = !isVisible;
     setIsVisible(newVisibility);
-    onVisibilityChange(newVisibility, index, labelmap3D);
+    onVisibilityChange(newVisibility, index);
   };
 
   return (

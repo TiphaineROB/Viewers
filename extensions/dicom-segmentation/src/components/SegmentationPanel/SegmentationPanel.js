@@ -11,6 +11,10 @@ import DICOMSegTempCrosshairsTool from '../../tools/DICOMSegTempCrosshairsTool';
 import setActiveLabelmap from '../../utils/setActiveLabelMap';
 import refreshViewports from '../../utils/refreshViewports';
 
+import { api } from 'dicomweb-client';
+import JSZip from 'jszip';
+import { UINotificationService } from '@ohif/core';
+
 import {
   BrushColorSelector,
   BrushRadius,
@@ -20,6 +24,7 @@ import {
 } from '../index';
 
 import './SegmentationPanel.css';
+//import '../../../../girder-radiomics/src/components/GirderRadiomicsPanel.styl';
 import SegmentationSettings from '../SegmentationSettings/SegmentationSettings';
 
 const { studyMetadataManager } = utils;
@@ -137,6 +142,7 @@ const SegmentationPanel = ({
     const allDisplaySets = studyMetadata.getDisplaySets();
     let selectedSegmentation;
     let newLabelmapIndex = getActiveLabelMapIndex();
+    // console.log('SegmentationPanel:: setActiveSegment -- ', allDisplaySets)
     allDisplaySets.forEach(displaySet => {
       if (displaySet.labelmapSegments) {
         Object.keys(displaySet.labelmapSegments).forEach(labelmapIndex => {
@@ -224,20 +230,16 @@ const SegmentationPanel = ({
         )
       );
     };
-  }, [
-    activeIndex,
-    updateSegmentationComboBox,
-    viewports,
-  ]);
+  }, [activeIndex, viewports]);
 
-  const updateSegmentationComboBox = e => {
+  const updateSegmentationComboBox = (e) => {
     const index = e.detail.activatedLabelmapIndex;
     if (index !== -1) {
       setState(state => ({ ...state, selectedSegmentation: index }));
     } else {
       cleanSegmentationComboBox();
     }
-  };
+  }
 
   const cleanSegmentationComboBox = () => {
     setState(state => ({
@@ -249,9 +251,10 @@ const SegmentationPanel = ({
       isDisabled: true,
       selectedSegmentation: -1,
     }));
-  };
+  }
 
   const refreshSegmentations = () => {
+    // console.log('SegmentationPanel:: refreshSegmentations')
     const activeViewport = getActiveViewport();
     const isDisabled = !activeViewport || !activeViewport.StudyInstanceUID;
     if (!isDisabled) {
@@ -313,8 +316,7 @@ const SegmentationPanel = ({
     );
 
     const filteredReferencedSegDisplaysets = referencedSegDisplaysets.filter(
-      segDisplay => segDisplay.loadError !== true
-    );
+      (segDisplay => segDisplay.loadError !== true));
 
     return filteredReferencedSegDisplaysets.map((displaySet, index) => {
       const {
@@ -323,6 +325,7 @@ const SegmentationPanel = ({
         hasOverlapping,
         SeriesDate,
         SeriesTime,
+        metadata,
       } = displaySet;
 
       /* Map to display representation */
@@ -335,6 +338,7 @@ const SegmentationPanel = ({
         value: hasOverlapping === true ? originLabelMapIndex : labelmapIndex,
         title: displayDescription,
         description: displayDate,
+        metadata: metadata,
         onClick: async () => {
           const activatedLabelmapIndex = await setActiveLabelmap(
             activeViewport,
@@ -431,43 +435,23 @@ const SegmentationPanel = ({
     return enabledElements[activeIndex].element;
   };
 
-  const onSegmentVisibilityChangeHandler = (
-    isVisible,
-    segmentNumber,
-    labelmap3D
-  ) => {
-    let segmentsHidden = [];
-    if (labelmap3D.metadata.hasOverlapping) {
-      /** Get all labelmaps with this segmentNumber and that
-       * are from the same series (overlapping segments) */
-      const { labelmaps3D } = getBrushStackState();
-
-      const sameSeriesLabelMaps3D = labelmaps3D.filter(({ metadata }) => {
-        return (
-          labelmap3D.metadata.segmentationSeriesInstanceUID ===
-          metadata.segmentationSeriesInstanceUID
-        );
-      });
-
-      const possibleLabelMaps3D = sameSeriesLabelMaps3D.filter(
-        ({ labelmaps2D }) => {
-          return labelmaps2D.some(({ segmentsOnLabelmap }) =>
-            segmentsOnLabelmap.includes(segmentNumber)
-          );
-        }
+  const onSegmentVisibilityChangeHandler = (isVisible, segmentNumber) => {
+    /** Get all labelmaps with this segmentNumber (overlapping segments) */
+    const { labelmaps3D } = getBrushStackState();
+    const possibleLabelMaps3D = labelmaps3D.filter(({ labelmaps2D }) => {
+      return labelmaps2D.some(({ segmentsOnLabelmap }) =>
+        segmentsOnLabelmap.includes(segmentNumber)
       );
+    });
 
-      possibleLabelMaps3D.forEach(labelmap3D => {
-        labelmap3D.segmentsHidden[segmentNumber] = !isVisible;
-
-        segmentsHidden = [
-          ...new Set([...segmentsHidden, ...labelmap3D.segmentsHidden]),
-        ];
-      });
-    } else {
+    let segmentsHidden = [];
+    possibleLabelMaps3D.forEach(labelmap3D => {
       labelmap3D.segmentsHidden[segmentNumber] = !isVisible;
-      segmentsHidden = [...labelmap3D.segmentsHidden];
-    }
+
+      segmentsHidden = [
+        ...new Set([...segmentsHidden, ...labelmap3D.segmentsHidden]),
+      ];
+    });
 
     setState(state => ({ ...state, segmentsHidden }));
 
@@ -534,7 +518,6 @@ const SegmentationPanel = ({
           label={segmentLabel}
           index={segmentNumber}
           color={color}
-          labelmap3D={labelmap3D}
           visible={!labelmap3D.segmentsHidden[segmentIndex]}
           onVisibilityChange={onSegmentVisibilityChangeHandler}
         />
@@ -658,6 +641,103 @@ const SegmentationPanel = ({
     i => i.value === state.selectedSegmentation
   );
 
+  // Added functions
+  const notification = UINotificationService.create({});
+
+  const uploadSegmentations = () => {
+    console.log('TODO : Uploading segmentations')
+    const currentSegment = selectedSegmentationOption.metadata
+
+
+    console.log(currentSegment)
+  };
+
+  const createSegment = () => {
+    console.log('TODO : Create a new segment')
+  };
+
+
+  const downloadSegment = () => {
+    console.log('TODO : Downloading segmentations')
+    const config = {
+      url: window.config.servers.dicomWeb[0].qidoRoot,
+      // headers: DICOMWeb.getAuthorizationHeader(window.config.servers.dicomWeb[0]),
+    };
+    const dicomWeb = new api.DICOMwebClient(config);
+
+    //Get the ID of the current selectedSegment
+    const currentSegment = selectedSegmentationOption.metadata
+    const studyInstanceUID = currentSegment.StudyInstanceUID;
+    const seriesInstanceUID = currentSegment.SeriesInstanceUID;
+
+    const options = {
+      studyInstanceUID: studyInstanceUID,
+      seriesInstanceUID: seriesInstanceUID,
+    }
+
+    //Get current display instance
+    // var enabledElement = cornerstoneTools.external.cornerstone.getEnabledElements()[0];
+    // var enabledImageId = enabledElement.image.imageId;
+    // enabledImageId = enabledImageId.substring(
+    //   enabledImageId.indexOf(config.url) + config.url.length
+    // );
+    // var splitImageId = enabledImageId.split('/');
+    // const enabledStudyInstanceUID = splitImageId[2];
+    // const enabledSeriesInstanceUID = splitImageId[4];
+    // const enabledSopInstanceUID = splitImageId[6];
+    // const optionsbis = {
+    //   studyInstanceUID: enabledStudyInstanceUID,
+    //   seriesInstanceUID: enabledSeriesInstanceUID,
+    //   //sopInstanceUID: enabledSopInstanceUID,
+    // };
+
+    dicomWeb.retrieveSeries(options).then(instances => {
+      console.log(instances)
+      var FileSaver = require('file-saver');
+      var zip = new JSZip();
+      if (instances.length === 1) {
+        let filename = `${seriesInstanceUID}.dcm`
+        var FileSaver = require('file-saver');
+        var blob = new Blob(instances, { type: 'text/plain;charset=utf-8' });
+        FileSaver.saveAs(blob, filename);
+        notification.show({
+          title: 'Downloading segments',
+          message: '3D dcm file downloaded',
+          type: 'success',
+          duration: 2000,
+        });
+      }
+      else {
+        let filename = `${seriesInstanceUID}.zip`
+        for (let i = 0; i < instances.length; i++) {
+            var blob = new Blob([instances[i]], { type: 'text/plain;charset=utf-8' });
+            var blobname = `${i}.dcm`
+            zip.file(blobname, blob)
+        }
+        zip.generateAsync({type:"blob"})
+        .then(function(content) {
+            saveAs(content, filename);
+        }, function(err){
+            console.log(err)
+            notification.show({
+              title: 'Downloading segments',
+              message: 'Could not download segments, make sure its uploaded on the server',
+              type: 'error',
+              duration: 2000,
+            });
+        });
+        notification.show({
+          title: 'Downloading segments',
+          message: 'Multiple instances saved in zip file',
+          type: 'warning',
+          duration: 2000,
+        });
+      }
+    }, function(err){
+      console.log(err)
+    });
+  };
+
   if (state.showSettings) {
     return (
       <SegmentationSettings
@@ -705,6 +785,33 @@ const SegmentationPanel = ({
             options={state.labelMapList}
           />
         </div>
+        <table width="100%">
+          <tbody>
+            <tr>
+              <td padding="5px">
+
+                <button onClick={createSegment} className="ui-btn-hover-b" title='Add Segment'>
+                  &nbsp;&nbsp;
+                  <Icon name="plus" width="12px" height="12px" margins="10px"/>
+                  &nbsp; New &nbsp;
+                </button>
+
+                <button onClick={uploadSegmentations} className="ui-btn-hover-b" title='Save Changes on server'>
+                  &nbsp;&nbsp;
+                  <Icon name="save" width="12px" height="12px" margins="10px"/>
+                  &nbsp;&nbsp; Save changes on server &nbsp;&nbsp;
+                </button>
+
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button onClick={downloadSegment} className="ui-btn-hover-a" title='Download Segment'>
+          &nbsp;
+          <Icon name="chevron-down" width="12px" height="12px" />
+          &nbsp; Download segment locally &nbsp;
+        </button>
+        <br style={{ margin: '3px' }} />
         <SegmentsSection
           count={state.segmentList.length}
           isVisible={
@@ -717,6 +824,7 @@ const SegmentationPanel = ({
             <TableList headless>{state.segmentList}</TableList>
           </ScrollableArea>
         </SegmentsSection>
+
       </div>
     );
   }
@@ -760,6 +868,7 @@ SegmentationPanel.defaultProps = {};
 const _getReferencedSegDisplaysets = (StudyInstanceUID, SeriesInstanceUID) => {
   /* Referenced DisplaySets */
   const studyMetadata = studyMetadataManager.get(StudyInstanceUID);
+  // console.log('SegmentationPanel:: calls getDerivedDatasets')
   const referencedDisplaysets = studyMetadata.getDerivedDatasets({
     referencedSeriesInstanceUID: SeriesInstanceUID,
     Modality: 'SEG',
@@ -818,5 +927,7 @@ const noop = () => {};
 SegmentsSection.defaultProps = {
   onVisibilityChange: noop,
 };
+
+
 
 export default SegmentationPanel;

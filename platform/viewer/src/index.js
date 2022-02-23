@@ -34,6 +34,10 @@ import OHIFDicomPDFExtension from '@ohif/extension-dicom-pdf';
 //import OHIFDebuggingExtension from '@ohif/extension-debugging';
 import { version } from '../package.json';
 
+
+import OHIFMONAILabelExtension from '@ohif/extension-monai-label';
+import OHIFGirderRadiomicsExtension from '@ohif/extension-girder-radiomics';
+
 /*
  * Default Settings
  */
@@ -47,6 +51,8 @@ if (window) {
 const appProps = {
   config,
   defaultExtensions: [
+    OHIFGirderRadiomicsExtension,
+    OHIFMONAILabelExtension,
     OHIFVTKExtension,
     OHIFDicomHtmlExtension,
     OHIFDicomMicroscopyExtension,

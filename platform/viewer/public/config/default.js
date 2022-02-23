@@ -18,6 +18,7 @@ window.config = {
   servers: {
     dicomWeb: [
       {
+
         name: 'DCM4CHEE',
         wadoUriRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/wado',
         qidoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
@@ -26,8 +27,29 @@ window.config = {
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
         enableStudyLazyLoad: true,
-        supportsFuzzyMatching: true,
+        // name: 'OrthancLocal',
+        // wadoUriRoot: 'http://localhost/proxy/dicom-web/wado',
+        // qidoRoot: 'http://localhost/proxy/dicom-web',
+        // wadoRoot: 'http://localhost/proxy/dicom-web',
+        // qidoSupportsIncludeField: true,
+        // imageRendering: 'wadors',
+        // thumbnailRendering: 'wadors',
+        // enableStudyLazyLoad: true,
+        // supportsFuzzyMatching: true,
       },
+      {
+        name: 'Orthanc',
+        wadoUriRoot: 'https://covid.creatis.insa-lyon.fr/orthanc/dicom-web/wado',//'http://localhost/proxy/dicom-web/wado',
+        qidoRoot: 'https://covid.creatis.insa-lyon.fr/orthanc/dicom-web', //'http://localhost/proxy/dicom-web',
+        wadoRoot: 'https://covid.creatis.insa-lyon.fr/orthanc/dicom-web', //'http://localhost/proxy/dicom-web',
+        qidoSupportsIncludeField: true,
+        imageRendering: 'wadors',
+        thumbnailRendering: 'wadors',
+        enableStudyLazyLoad: true,
+        supportsFuzzyMatching: true,
+
+      },
+
     ],
   },
   // Extensions should be able to suggest default values for these?

@@ -48,6 +48,7 @@ function makeSeriesAsyncLoader(
   studyInstanceUID,
   seriesInstanceUIDList
 ) {
+  // console.log( ' >>>>    retrieveMetadataLoader :: makeSeriesAsyncLoader' )
   return Object.freeze({
     hasNext() {
       return seriesInstanceUIDList.length > 0;
@@ -58,6 +59,29 @@ function makeSeriesAsyncLoader(
         studyInstanceUID,
         seriesInstanceUID,
       });
+
+      // Added to get complete instances metadata -- especially 0008115 field
+      let instances = [];
+      for (const sopInstance of sopInstances) {
+
+        const sopInstanceUID = sopInstance['00080018'].Value;
+        const sopInstanceModality = sopInstance['00080060'].Value;
+        if (sopInstanceModality[0] === 'SEG') {
+          const instance = await dicomWebClient.retrieveInstanceMetadata({
+            studyInstanceUID:  studyInstanceUID,
+            seriesInstanceUID:  seriesInstanceUID,
+            sopInstanceUID: sopInstanceUID,
+          })
+          instances = instances.concat(instance);
+          if (instance[0].hasOwnProperty('00081115')){
+            sopInstance['00081115']= instance[0]['00081115'];
+          }
+          if (instance[0].hasOwnProperty('52009230')){
+            sopInstance['52009230']= instance[0]['52009230'];
+          }
+        }
+        //console.log(sopInstance)
+      }
       return { studyInstanceUID, seriesInstanceUID, sopInstances };
     },
   });

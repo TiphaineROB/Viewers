@@ -117,6 +117,7 @@ export class StudyPrefetcher {
    * @param {number} timeout
    */
   prefetchDisplaySetsAsync(element, timeout) {
+    // console.log('StudyPrefetcher:: prefetchDisplaySetsAsync')
     try {
       this.enabledElement = cornerstone.getEnabledElement(element);
     } catch {
