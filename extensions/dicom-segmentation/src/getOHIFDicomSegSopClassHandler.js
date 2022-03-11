@@ -7,6 +7,8 @@ import dcmjs from 'dcmjs';
 const { DicomLoaderService } = OHIF.utils;
 const { DicomMessage, DicomMetaDictionary } = dcmjs.data;
 
+import SegmentationCustom from './utils/customGenerateToolState.js';
+
 // TODO: Should probably use dcmjs for this
 const SOP_CLASS_UIDS = {
   DICOM_SEG: '1.2.840.10008.5.1.4.1.1.66.4',
@@ -75,6 +77,7 @@ export default function getSopClassHandlerModule({ servicesManager }) {
           segDisplaySet,
           studies
         );
+
         const dicomData = DicomMessage.readFile(segArrayBuffer);
         const dataset = DicomMetaDictionary.naturalizeDataset(dicomData.dict);
         dataset._meta = DicomMetaDictionary.namifyDataset(dicomData.meta);
@@ -135,11 +138,22 @@ export default function getSopClassHandlerModule({ servicesManager }) {
 }
 
 function _parseSeg(arrayBuffer, imageIds) {
-  return dcmjs.adapters.Cornerstone.Segmentation.generateToolState(
-    imageIds,
-    arrayBuffer,
-    cornerstone.metaData
-  );
+  const defaultGenerateToolState = dcmjs.adapters.Cornerstone.Segmentation.generateToolState(
+        imageIds,
+        arrayBuffer,
+        cornerstone.metaData
+      );
+
+  if (defaultGenerateToolState &&   defaultGenerateToolState.segmentsOnFrame.length === 0){
+    const customResultGenerateToolState = SegmentationCustom.generateToolState(
+        imageIds,
+        arrayBuffer,
+        cornerstone.metaData
+      );
+    console.log("End custom function ", customResultGenerateToolState)
+    return customResultGenerateToolState;
+  }
+  return defaultGenerateToolState;
 }
 
 function _getImageIdsForDisplaySet(

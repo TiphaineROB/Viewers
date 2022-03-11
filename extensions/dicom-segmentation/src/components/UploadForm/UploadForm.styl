@@ -1,0 +1,73 @@
+.uploadForm
+  width: 600px
+
+  .actionAccept
+    -moz-box-shadow:0 1px 4px rgba(0,0,0,.3);
+    -webkit-box-shadow:0 1px 4px rgba(0,0,0,.3);
+    border:1px solid #00415e;
+    background-color:#4b88b6;
+    font-weight:bold;
+    color:#fff;
+    text-shadow:0 1px 1px #194b7e;
+    background:-webkit-gradient(linear,left top,left bottom,from(#6facd5),to(#4272a4));
+    background:-webkit-linear-gradient(#6facd5,#4272a4);
+    background:-moz-linear-gradient(#6facd5,#4272a4);
+    background:-ms-linear-gradient(#6facd5,#4272a4);
+    background:-o-linear-gradient(#6facd5,#4272a4);
+    background:linear-gradient(#6facd5,#4272a4);
+    -moz-border-radius:1em;
+    -webkit-border-radius:1em;
+    -webkit-background-clip:padding-box;
+    -moz-background-clip:padding;
+    background-clip:padding-box;
+    border-radius: 15px
+    line-height: 25px
+    padding: 0 15px
+    outline: none
+    cursor: pointer
+
+  .actionAccept:hover,
+     background-color: var(--ui-sky-blue)
+
+  .actionAccept:disabled
+     background-color: var(--ui-sky-blue)
+
+  svg
+     margin-right: 4px
+     position: relative
+     top: 2px
+  
+  
+  .actionReject
+     border:1px solid #111;
+     background:#333;
+     font-weight:bold;
+     color:#fff;
+     text-shadow:0 1px 1px #111;
+     background-image:-webkit-gradient(linear,left top,left bottom,from(var(--ui-gray)),to(var(--ui-gray-dark)));
+     background-image:-webkit-linear-gradient(var(--ui-gray),var(--ui-gray-dark));
+     background-image:-moz-linear-gradient(var(--ui-gray),var(--ui-gray-dark));
+     background-image:-ms-linear-gradient(var(--ui-gray),var(--ui-gray-dark));
+     background-image:-o-linear-gradient(var(--ui-gray),var(--ui-gray-dark));
+     background-image:linear-gradient(var(--ui-gray),var(--ui-gray-dark));
+     -webkit-background-clip:padding-box;
+     -moz-background-clip:padding;
+     background-clip:padding-box;
+     -moz-border-radius:1em;
+     -webkit-border-radius:1em;
+     border-radius: 15px
+     line-height: 25px
+     padding: 0 15px
+     outline: none
+     cursor: pointer
+
+     &:hover, &:active
+       background-color: var(--ui-sky-blue)
+
+     &:disabled
+       background-color: var(--ui-sky-blue)
+
+     svg
+       margin-right: 4px
+       position: relative
+       top: 2px

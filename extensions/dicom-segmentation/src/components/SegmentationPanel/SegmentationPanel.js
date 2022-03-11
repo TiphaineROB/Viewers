@@ -1,19 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import cornerstoneTools from 'cornerstone-tools';
 import cornerstone from 'cornerstone-core';
 import moment from 'moment';
 import classNames from 'classnames';
-import { utils, log } from '@ohif/core';
+import { utils, log, classes, DICOMWeb, errorHandler } from '@ohif/core';
 import { ScrollableArea, TableList, Icon } from '@ohif/ui';
 import DICOMSegTempCrosshairsTool from '../../tools/DICOMSegTempCrosshairsTool';
 
 import setActiveLabelmap from '../../utils/setActiveLabelMap';
 import refreshViewports from '../../utils/refreshViewports';
 
+
+
 import { api } from 'dicomweb-client';
 import JSZip from 'jszip';
 import { UINotificationService } from '@ohif/core';
+import * as dicomParser from 'dicom-parser';
+import loadFiles from '../../utils/loadFiles';
+import downloadFile from '../../utils/downloadFile'
+import uploadSegment from '../../utils/uploadSegment'
+import newSegment from '../../utils/newSegment'
+
+import {
+  sendToServer,
+} from '../../utils/mockMetadataTools';
+
+import SegmentationCustom from '../../utils/customGenerateToolState.js';
 
 import {
   BrushColorSelector,
@@ -27,7 +40,11 @@ import './SegmentationPanel.css';
 //import '../../../../girder-radiomics/src/components/GirderRadiomicsPanel.styl';
 import SegmentationSettings from '../SegmentationSettings/SegmentationSettings';
 
-const { studyMetadataManager } = utils;
+const { studyMetadataManager, xhrRetryRequestHook} = utils;
+const { MetadataProvider } = classes;
+
+const { getXHRRetryRequestHook } = xhrRetryRequestHook;
+
 
 /**
  * SegmentationPanel component
@@ -644,99 +661,258 @@ const SegmentationPanel = ({
   // Added functions
   const notification = UINotificationService.create({});
 
-  const uploadSegmentations = () => {
-    console.log('TODO : Uploading segmentations')
-    const currentSegment = selectedSegmentationOption.metadata
+  const callbackSegmentations = (dcm, save=true) => {
+    const dcmjs = require("dcmjs");
+    const buffer = Buffer.from(dcm.write());
+    var blob = new Blob([buffer], { type: 'text/plain;charset=utf-8' });
 
 
-    console.log(currentSegment)
-  };
+    const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
+      dcm.dict
+    );
 
-  const createSegment = () => {
-    console.log('TODO : Create a new segment')
-  };
+    const parsed = dicomParser.parseDicom(buffer)
+
+    try {
 
 
-  const downloadSegment = () => {
-    console.log('TODO : Downloading segmentations')
-    const config = {
-      url: window.config.servers.dicomWeb[0].qidoRoot,
-      // headers: DICOMWeb.getAuthorizationHeader(window.config.servers.dicomWeb[0]),
-    };
-    const dicomWeb = new api.DICOMwebClient(config);
+      const element = document.getElementsByClassName("viewport-element")[0];
+      const globalToolStateManager =
+              cornerstoneTools.globalImageIdSpecificToolStateManager;
+      const toolState = globalToolStateManager.saveToolState();
 
-    //Get the ID of the current selectedSegment
-    const currentSegment = selectedSegmentationOption.metadata
-    const studyInstanceUID = currentSegment.StudyInstanceUID;
-    const seriesInstanceUID = currentSegment.SeriesInstanceUID;
+      const stackToolState = cornerstoneTools.getToolState(element, "stack");
+      const imageIds = stackToolState.data[0].imageIds;
 
-    const options = {
-      studyInstanceUID: studyInstanceUID,
-      seriesInstanceUID: seriesInstanceUID,
-    }
-
-    //Get current display instance
-    // var enabledElement = cornerstoneTools.external.cornerstone.getEnabledElements()[0];
-    // var enabledImageId = enabledElement.image.imageId;
-    // enabledImageId = enabledImageId.substring(
-    //   enabledImageId.indexOf(config.url) + config.url.length
-    // );
-    // var splitImageId = enabledImageId.split('/');
-    // const enabledStudyInstanceUID = splitImageId[2];
-    // const enabledSeriesInstanceUID = splitImageId[4];
-    // const enabledSopInstanceUID = splitImageId[6];
-    // const optionsbis = {
-    //   studyInstanceUID: enabledStudyInstanceUID,
-    //   seriesInstanceUID: enabledSeriesInstanceUID,
-    //   //sopInstanceUID: enabledSopInstanceUID,
-    // };
-
-    dicomWeb.retrieveSeries(options).then(instances => {
-      console.log(instances)
-      var FileSaver = require('file-saver');
-      var zip = new JSZip();
-      if (instances.length === 1) {
-        let filename = `${seriesInstanceUID}.dcm`
-        var FileSaver = require('file-saver');
-        var blob = new Blob(instances, { type: 'text/plain;charset=utf-8' });
-        FileSaver.saveAs(blob, filename);
-        notification.show({
-          title: 'Downloading segments',
-          message: '3D dcm file downloaded',
-          type: 'success',
-          duration: 2000,
-        });
+      let imagePromises = [];
+      for (let i = 0; i < imageIds.length; i++) {
+        imagePromises.push(cornerstone.loadImage(imageIds[i]));
       }
-      else {
-        let filename = `${seriesInstanceUID}.zip`
-        for (let i = 0; i < instances.length; i++) {
-            var blob = new Blob([instances[i]], { type: 'text/plain;charset=utf-8' });
-            var blobname = `${i}.dcm`
-            zip.file(blobname, blob)
-        }
-        zip.generateAsync({type:"blob"})
-        .then(function(content) {
-            saveAs(content, filename);
-        }, function(err){
-            console.log(err)
-            notification.show({
-              title: 'Downloading segments',
-              message: 'Could not download segments, make sure its uploaded on the server',
-              type: 'error',
-              duration: 2000,
-            });
-        });
+
+      const segments = [];
+      const { getters, setters } = cornerstoneTools.getModule('segmentation');
+
+      const { labelmaps3D } = getters.labelmaps3D(element);
+
+      if (!labelmaps3D) {
+        console.log("Current LabelMaps3D is empty... Loading new ")
+      }
+
+
+      const t0 = performance.now();
+
+      const { Segmentation } = dcmjs.adapters.Cornerstone;
+      const toolstate = Segmentation.generateToolState( imageIds ,
+            parsed.byteArray.buffer, MetadataProvider)
+
+      console.log(toolstate)
+
+      const {
+        labelmapBufferArray,
+        segMetadata,
+        segmentsOnFrame
+      } = toolstate;
+
+      console.log(dataset)
+
+      // Add the new Label map -> not working ?
+      setters.labelmap3DByFirstImageId(
+          imageIds[0],
+          labelmapBufferArray[0],
+          1,
+          segMetadata,
+          imageIds.length,
+          segmentsOnFrame
+      );
+
+      // let labelmaplist = getLabelMapList();
+      // const hasOverlapping = false;
+      // const activatedLabelmapIndex = labelmaplist.length + 1;
+      // const dateStr = `${dataset.SeriesDate}:${dataset.SeriesTime}`.split('.')[0];
+      // const date = moment(dateStr, 'YYYYMMDD:HHmmss');
+      // const displayDate = date.format('ddd, MMM Do YYYY, h:mm:ss a');
+      // labelmaplist.push(
+      //   {
+      //     value: hasOverlapping === true ? originLabelMapIndex : activatedLabelmapIndex,
+      //     title: dataset.SeriesDescription,
+      //     description: displayDate,
+      //     metadata: dataset,
+      //     onClick: async () => {
+      //       setState(state => ({
+      //         ...state,
+      //         selectedSegmentation: activatedLabelmapIndex,
+      //       }));
+      //     },
+      //   });
+      //
+      // setState(state => ({
+      //   ...state,
+      //   labelMapList: labelmaplist,
+      //   selectedSegmentation: activatedLabelmapIndex,
+      // }));
+
+      const t1 = performance.now();
+      console.log(`Decode SEG and load to cornerstone: ${t1-t0}`)
+
+      if (save) { sendToServer(dcm);}
+      refreshViewports();
+      refreshSegmentations();
+
+      notification.show({
+        title: 'Loading Segmentation',
+        message: 'Might need to refresh the page',
+        type: 'Success',
+        duration: 2000,
+      });
+
+
+    } catch (err) {
+      console.log(err)
+      notification.show({
+        title: 'Loading Segmentation',
+        message: err,
+        type: 'error',
+        duration: 2000,
+      });
+    }
+  }
+
+
+  const uploadSegmentations = async () => {
+    const dcmjs = require('dcmjs')
+    var activeLabelMaps3D;
+    var currentSegment;
+    try {
+      activeLabelMaps3D = getActiveLabelMaps3D();
+      currentSegment = selectedSegmentationOption;
+
+      if (!activeLabelMaps3D || currentSegment === undefined){
         notification.show({
-          title: 'Downloading segments',
-          message: 'Multiple instances saved in zip file',
+          title: 'Upload Segment',
+          message: 'empty...',
           type: 'warning',
           duration: 2000,
         });
       }
-    }, function(err){
+      const config = {
+        url: window.config.servers.dicomWeb[0].qidoRoot,
+        headers: DICOMWeb.getAuthorizationHeader(),
+        errorInterceptor: errorHandler.getHTTPErrorHandler(),
+        requestHooks: [xhrRetryRequestHook()],
+      };
+      const dicomWeb = new api.DICOMwebClient(config);
+
+      const studyInstanceUID = currentSegment.metadata.StudyInstanceUID;
+      const seriesInstanceUID = currentSegment.metadata.SeriesInstanceUID;
+      const sopInstanceUID = currentSegment.metadata.SOPInstanceUID;
+
+      var options = {
+        studyInstanceUID: studyInstanceUID,
+        seriesInstanceUID: seriesInstanceUID,
+        sopInstanceUID: sopInstanceUID
+      }
+
+      const instance = await dicomWeb.retrieveInstance(options)
+      var dicomData = dcmjs.data.DicomMessage.readFile(instance);
+
+      const callbackUpload = (dicomWeb, dicomDict, newDicomDict, removePrevious) => {
+          if (removePrevious){
+            // Needs to use another methods than the dicomWeb
+            console.log("TODO remove previous ?")
+          }
+          callbackSegmentations(newDicomDict);
+      }
+
+      await uploadSegment(dicomWeb, dicomData, currentSegment, activeLabelMaps3D, callbackUpload);
+
+    } catch (err) {
       console.log(err)
-    });
+      notification.show({
+        title: 'Upload Segment',
+        message: 'No segments available',
+        type: 'error',
+        duration: 2000,
+      });
+      return;
+    }
   };
+
+
+  const createSegment = async () => {
+    console.log('TODO : Create a new segment')
+    notification.show({
+      title: 'Create Segments',
+      message: 'Work in Progress',
+      type: 'warning',
+      duration: 2000,
+    });
+
+    const config = {
+      url: window.config.servers.dicomWeb[0].qidoRoot,
+      // headers: DICOMWeb.getAuthorizationHeader(window.config.servers.dicomWeb[0]),
+    };
+
+    var enabledElement = cornerstoneTools.external.cornerstone.getEnabledElements()[0];
+    var enabledImageId = enabledElement.image.imageId;
+
+    enabledImageId = enabledImageId.substring(
+      enabledImageId.indexOf(config.url) + config.url.length
+    );
+    var splitImageId = enabledImageId.split('/');
+    const enabledStudyInstanceUID = splitImageId[2];
+    const enabledSeriesInstanceUID = splitImageId[4];
+
+
+    const dicomWeb = new api.DICOMwebClient(config);
+    var enabledSeriesMeta = await dicomWeb.retrieveSeriesMetadata({
+        studyInstanceUID: enabledStudyInstanceUID,
+        seriesInstanceUID: enabledSeriesInstanceUID,
+    })
+    var enabledSeries = await dicomWeb.retrieveSeries({
+        studyInstanceUID: enabledStudyInstanceUID,
+        seriesInstanceUID: enabledSeriesInstanceUID,
+    })
+
+
+    const callbackNewSegment = (dicomDerived) => {
+      console.log("Callback new segment")
+      callbackSegmentations(dicomDerived, true);
+      notification.show({
+        title: 'Create Segments',
+        message: "Ready to be modified, don't forget to save",
+        type: 'warning',
+        duration: 9000,
+      });
+    }
+
+    await newSegment(enabledSeries, enabledSeriesMeta, callbackNewSegment)
+  };
+
+
+  const downloadSegment = () => {
+    downloadFile(selectedSegmentationOption);
+  };
+
+  const loadSegmentations = async () => {
+    const files = inputRef.current.files
+    if (files.length === 0) {
+      notification.show({
+        title: 'Load Segments',
+        message: 'No file selected, nothing to do',
+        type: 'warning',
+        duration: 2000,
+      });
+    }
+    else {
+      var dcmfiles = []
+      for (let i = 0; i < files.length; i++) {
+        let file = files[i];
+        await loadFiles(file, callbackSegmentations)
+      }
+    }
+  };
+
+  const inputRef = useRef(null);
 
   if (state.showSettings) {
     return (
@@ -785,33 +961,58 @@ const SegmentationPanel = ({
             options={state.labelMapList}
           />
         </div>
+
+        <p style={{ fontSize: 'smaller' }}>
+          Add or load new segments.
+        </p>
         <table width="100%">
           <tbody>
             <tr>
-              <td padding="5px">
-
-                <button onClick={createSegment} className="ui-btn-hover-b" title='Add Segment'>
-                  &nbsp;&nbsp;
-                  <Icon name="plus" width="12px" height="12px" margins="10px"/>
-                  &nbsp; New &nbsp;
-                </button>
-
-                <button onClick={uploadSegmentations} className="ui-btn-hover-b" title='Save Changes on server'>
-                  &nbsp;&nbsp;
-                  <Icon name="save" width="12px" height="12px" margins="10px"/>
-                  &nbsp;&nbsp; Save changes on server &nbsp;&nbsp;
-                </button>
+              <td>
+                  <button onClick={createSegment} className="ui-btn-hover-b" title='Add Segment'>
+                    &nbsp;
+                    <Icon name="plus" width="12px" height="12px" margins="10px"/>
+                    &nbsp; New &nbsp;
+                  </button>
+                  &nbsp;
+                  <button onClick={loadSegmentations} className="ui-btn-hover-b" title='Load segments'>
+                    &nbsp;&nbsp;
+                    <Icon name="rotate" width="12px" height="12px" margins="10px"/>
+                    &nbsp; Start Loading Segments &nbsp;
+                  </button>
+                  <input
+                    id="files"
+                    width="20%"
+                    className="ui-btn-hover-c"
+                    type="file"
+                    ref={inputRef }
+                    multiple
+                    size="1"
+                  />
 
               </td>
             </tr>
           </tbody>
         </table>
+
+        <p style={{ fontSize: 'smaller' }}>
+          Synchronize server and download locally segments.
+        </p>
+        <button onClick={uploadSegmentations} className="ui-btn-hover-b" title='Save Changes on server'>
+          &nbsp;
+          <Icon name="save" width="12px" height="12px"/>
+          &nbsp;&nbsp;&nbsp;&nbsp; Save changes on server &nbsp;&nbsp;
+        </button>
+
+
         <button onClick={downloadSegment} className="ui-btn-hover-a" title='Download Segment'>
           &nbsp;
-          <Icon name="chevron-down" width="12px" height="12px" />
+          <Icon name="angle-double-down" width="12px" height="12px" />
           &nbsp; Download segment locally &nbsp;
         </button>
+
         <br style={{ margin: '3px' }} />
+
         <SegmentsSection
           count={state.segmentList.length}
           isVisible={

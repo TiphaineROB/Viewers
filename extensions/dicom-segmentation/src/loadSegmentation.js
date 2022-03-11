@@ -12,9 +12,18 @@ export default async function loadSegmentation(
 ) {
   const { setters } = cornerstoneTools.getModule('segmentation');
 
+  console.log("Load Segmentation Start")
+
+  console.log("segMetadata : ", segMetadata)
+  console.log("segmentsOnFrame : ", segmentsOnFrame)
+  console.log("labelmapSegments : ", labelmapSegments)
+
   // TODO: Could define a color LUT based on colors in the SEG.
   const labelmapIndex = _getNextLabelmapIndex(imageIds[0]);
   const colorLUTIndex = _makeColorLUTAndGetIndex(segMetadata);
+
+  console.log("labelmapIndex : ", labelmapIndex)
+  console.log("ColorLUTIndex ", colorLUTIndex)
 
   setters.labelmap3DByFirstImageId(
     imageIds[0],
@@ -126,6 +135,7 @@ function _makeColorLUTAndGetIndex(segMetadata) {
       colorLUT[i] = [...colorLutTables[0][i]];
     }
   }
+
 
   colorLUT.shift();
   setters.colorLUT(colorLUTIndex, colorLUT);
