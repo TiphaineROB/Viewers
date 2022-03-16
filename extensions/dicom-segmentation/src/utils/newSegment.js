@@ -69,7 +69,7 @@ export default async function newSegment(
   })
 
   const submit = (name, description, color, header, image) => {
-
+    //Here header and image should be empty
     uiModalService.hide()
 
     var derivated = createDerivedObject(enabledSeries);
@@ -132,8 +132,7 @@ export default async function newSegment(
         PixelData: "OB"
     }
     const dicomDerived = dcmjs.data.datasetToDict(derivated.dataset)
-
-    //Here header and image should be empty
+    console.log(derivated.dataset)
     callback(dicomDerived)
   }
 

@@ -137,14 +137,14 @@ export default function getSopClassHandlerModule({ servicesManager }) {
   };
 }
 
-function _parseSeg(arrayBuffer, imageIds) {
-  const defaultGenerateToolState = dcmjs.adapters.Cornerstone.Segmentation.generateToolState(
-        imageIds,
-        arrayBuffer,
-        cornerstone.metaData
-      );
+export function _parseSeg(arrayBuffer, imageIds) {
+  // const defaultGenerateToolState = dcmjs.adapters.Cornerstone.Segmentation.generateToolState(
+  //       imageIds,
+  //       arrayBuffer,
+  //       cornerstone.metaData
+  //     );
 
-  if (defaultGenerateToolState &&   defaultGenerateToolState.segmentsOnFrame.length === 0){
+  // if (defaultGenerateToolState &&   defaultGenerateToolState.segmentsOnFrame.length === 0){
     const customResultGenerateToolState = SegmentationCustom.generateToolState(
         imageIds,
         arrayBuffer,
@@ -152,11 +152,11 @@ function _parseSeg(arrayBuffer, imageIds) {
       );
     console.log("End custom function ", customResultGenerateToolState)
     return customResultGenerateToolState;
-  }
-  return defaultGenerateToolState;
+  // }
+  // return defaultGenerateToolState;
 }
 
-function _getImageIdsForDisplaySet(
+export function _getImageIdsForDisplaySet(
   studies,
   StudyInstanceUID,
   SeriesInstanceUID

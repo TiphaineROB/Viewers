@@ -329,6 +329,7 @@ function generateToolState(
     let pixelData;
 
     if (TransferSyntaxUID === "1.2.840.10008.1.2.5") {
+      console.log("rlEncodedFrames")
         const rleEncodedFrames = Array.isArray(multiframe.PixelData)
             ? multiframe.PixelData
             : [multiframe.PixelData];
@@ -1071,7 +1072,17 @@ function insertPixelDataPlanar(
         ? SharedFunctionalGroupsSequence.PlaneOrientationSequence
               .ImageOrientationPatient
         : undefined;
+    console.log(sharedImageOrientationPatient)
     const sliceLength = Columns * Rows;
+    let multiframePixelData;
+    if (Array.isArray(multiframe.PixelData)) {
+      multiframePixelData = multiframe.PixelData[0];
+    } else {
+      multiframePixelData = multiframe.PixelData;
+    }
+    const datalength = multiframePixelData.byteLength;
+    const volumesize = sliceLength*multiframe.NumberOfFrames;
+    const correctsize = datalength%volumesize===0;
 
     for (
         let i = 0, groupsLen = PerFrameFunctionalGroupsSequence.length;
@@ -1085,10 +1096,19 @@ function insertPixelDataPlanar(
             PerFrameFunctionalGroups.PlaneOrientationSequence
                 .ImageOrientationPatient;
 
-        let pixelDataI2D = ndarray(
-            new Uint16Array(pixelData.buffer, i * sliceLength, sliceLength),
+        // Specific check to ensure that alignment should be used or not
+        let pixelDataI2D;
+        if (correctsize) {
+          pixelDataI2D = ndarray(
+           new Uint16Array(pixelData.buffer, i * sliceLength, sliceLength),
+           [Rows, Columns]
+         );
+        } else {
+           pixelDataI2D = ndarray(
+            new Uint8Array(pixelData.buffer, i * sliceLength, sliceLength),
             [Rows, Columns]
-        );
+          );
+        }
 
         const alignedPixelDataI = alignPixelDataWithSourceData(
             pixelDataI2D,
@@ -1167,7 +1187,7 @@ function insertPixelDataPlanar(
             sliceLength
         );
 
-        const data = alignedPixelDataI.data;
+        const data = pixelDataI2D.data;
 
         for (let j = 0, len = alignedPixelDataI.data.length; j < len; ++j) {
             if (data[j]) {
@@ -1182,141 +1202,9 @@ function insertPixelDataPlanar(
                 }
 
                 segmentsOnFrame[imageIdIndex].push(segmentIndex);
-
                 break;
             }
          }
-    }
-    console.log(segmentsOnFrame)
-    if (segmentsOnFrame.length === 0) { // If default did not work try again with another
-      for (
-          let i = 0, groupsLen = PerFrameFunctionalGroupsSequence.length;
-          i < groupsLen;
-          ++i
-      ) {
-          const PerFrameFunctionalGroups = PerFrameFunctionalGroupsSequence[i];
-
-          const ImageOrientationPatientI =
-              sharedImageOrientationPatient ||
-              PerFrameFunctionalGroups.PlaneOrientationSequence
-                  .ImageOrientationPatient;
-
-          let multiframePixelData;
-          if (Array.isArray(multiframe.PixelData)) {
-            multiframePixelData = multiframe.PixelData[0];
-          } else {
-            multiframePixelData = multiframe.PixelData;
-          }
-
-          let pixelDataI2D;
-          try {
-            pixelDataI2D = ndarray(
-              new Uint16Array(multiframePixelData, i * sliceLength, sliceLength),
-              [Rows, Columns]
-            );
-          } catch {
-            pixelDataI2D = ndarray(
-              new Uint16Array( new ArrayBuffer (Rows*Columns)),
-              [Rows, Columns]
-            )
-          }
-          const alignedPixelDataI = alignPixelDataWithSourceData(
-              pixelDataI2D,
-              ImageOrientationPatientI,
-              validOrientations,
-              tolerance
-          );
-
-          if (!alignedPixelDataI) {
-              throw new Error(
-                  "Individual SEG frames are out of plane with respect to the first SEG frame. " +
-                      "This is not yet supported. Aborting segmentation loading."
-              );
-          }
-
-          const segmentIndex = getSegmentIndex(multiframe, i);
-          if (segmentIndex === undefined) {
-              throw new Error(
-                  "Could not retrieve the segment index. Aborting segmentation loading."
-              );
-          }
-
-          let SourceImageSequence = undefined;
-          if (multiframe.SourceImageSequence) {
-              SourceImageSequence = multiframe.SourceImageSequence[i];
-          } else {
-              SourceImageSequence =
-                  PerFrameFunctionalGroups.DerivationImageSequence
-                      .SourceImageSequence;
-          }
-
-          if (!SourceImageSequence) {
-              throw new Error(
-                  "Source Image Sequence information missing: individual SEG frames are out of plane. " +
-                      "This is not yet supported. Aborting segmentation loading."
-              );
-          }
-
-          const imageId = findReferenceSourceImageId(
-              SourceImageSequence,
-              imageIds,
-              metadataProvider,
-              PerFrameFunctionalGroups,
-              multiframe.FrameOfReferenceUID,
-              tolerance
-          );
-
-          if (!imageId) {
-              console.warn(
-                  "Image not present in stack, can't import frame : " + i + "."
-              );
-              continue;
-          }
-
-          const sourceImageMetadata = cornerstone.metaData.get(
-              "instance",
-              imageId
-          );
-          if (
-              Rows !== sourceImageMetadata.Rows ||
-              Columns !== sourceImageMetadata.Columns
-          ) {
-              throw new Error(
-                  "Individual SEG frames have different geometry dimensions (Rows and Columns) " +
-                      "respect to the source image reference frame. This is not yet supported. " +
-                      "Aborting segmentation loading. "
-              );
-          }
-
-          const imageIdIndex = imageIds.findIndex(element => element === imageId);
-          const byteOffset = sliceLength * 2 * imageIdIndex; // 2 bytes/pixel
-
-          const labelmap2DView = new Uint16Array(
-              labelmapBufferArray[0],
-              byteOffset,
-              sliceLength
-          );
-
-          // const data = alignedPixelDataI.data;
-          const data = pixelDataI2D.data;
-          for (let j = 0, len = data.length; j < len; ++j) {
-              if (data[j]) {
-                  for (let x = j; x < len; ++x) {
-                      if (data[x]) {
-                          labelmap2DView[x] = segmentIndex;
-                      }
-                  }
-
-                  if (!segmentsOnFrame[imageIdIndex]) {
-                      segmentsOnFrame[imageIdIndex] = [];
-                  }
-
-                  segmentsOnFrame[imageIdIndex].push(segmentIndex);
-                  break;
-              }
-          }
-        }
-        console.log("segmentsOnFrame : ", segmentsOnFrame)
     }
 }
 
@@ -1409,6 +1297,18 @@ function unpackPixelData(multiframe) {
         log.error("This segmentation pixeldata is undefined.");
     }
 
+    const datalength = data.byteLength;
+    const slicelength = multiframe.Columns*multiframe.Rows;
+    const volumesize = slicelength*multiframe.NumberOfFrames;
+    if (datalength%volumesize===0){
+      if (datalength/volumesize===2){
+        const unpackdata = new Uint16Array(data);
+        return unpackdata;
+      } else {
+        const unpackdata = new Uint8Array(data);
+        return unpackdata;
+      }
+    }
     if (segType === "BINARY") {
         const unpackeddata = BitArray.unpack(data);
         return unpackeddata;

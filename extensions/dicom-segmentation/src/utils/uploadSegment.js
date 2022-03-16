@@ -38,7 +38,8 @@ export default async function uploadSegment(
   dicomDict,
   currentSegment,
   activeLabelMaps3D,
-  callback
+  callback,
+  newSeg=false,
 ) {
 
   const uiModalService = UIModalService.create({});
@@ -89,8 +90,12 @@ export default async function uploadSegment(
 
     // newseg.addSegmentFromLabelmap(newseg.referencedDataset.SegmentSequence,
     //     [activeLabelMaps3D.labelmaps2D], segmentIndex, referencedFrameNumbers)
+
+
+    const array = new Uint16Array(activeLabelMaps3D.buffer)
+    const packedarray = dcmjs.data.BitArray.pack(array)
     addSegment(newseg.referencedDataset.SegmentSequence, newseg,
-        activeLabelMaps3D.buffer, referencedFrameNumbers)
+        packedarray, referencedFrameNumbers)
     //newseg.addSegment(newseg.referencedDataset.SegmentSequence,
     console.log(newseg)
 
@@ -108,21 +113,21 @@ export default async function uploadSegment(
           vr: "UI"
       }
     }
+    console.log(activeLabelMaps3D)
 
-    newseg.dataset.PixelData = activeLabelMaps3D.buffer;
     const dicomDerived = dcmjs.data.datasetToDict(newseg.dataset)
 
-    let bufferDerived = Buffer.from(dicomDerived.write());
+    // let bufferDerived = Buffer.from(dicomDerived.write());
+    //
+    // var FileSaver = require('file-saver');
+    // let filename = `test.dcm`
+    // var blobDerived = new Blob([bufferDerived], { type: 'text/plain;charset=utf-8' });
 
-    var FileSaver = require('file-saver');
-    let filename = `test.dcm`
-    var blobDerived = new Blob([bufferDerived], { type: 'text/plain;charset=utf-8' });
 
-
-    const derivedParsed = dicomParser.parseDicom(bufferDerived);
+    // const derivedParsed = dicomParser.parseDicom(bufferDerived);
     // console.log(derivedParsed)
 
-    FileSaver.saveAs(blobDerived, filename);
+    // FileSaver.saveAs(blobDerived, filename);
     callback(dicomWeb, dicomDict, dicomDerived, data.removePrevious)
 
   }

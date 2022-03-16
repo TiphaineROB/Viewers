@@ -14,16 +14,14 @@ export default async function loadSegmentation(
 
   console.log("Load Segmentation Start")
 
-  console.log("segMetadata : ", segMetadata)
-  console.log("segmentsOnFrame : ", segmentsOnFrame)
-  console.log("labelmapSegments : ", labelmapSegments)
+  // console.log("segMetadata : ", segMetadata)
+  // console.log("segmentsOnFrame : ", segmentsOnFrame)
+  // console.log("labelmapSegments : ", labelmapSegments)
 
   // TODO: Could define a color LUT based on colors in the SEG.
   const labelmapIndex = _getNextLabelmapIndex(imageIds[0]);
   const colorLUTIndex = _makeColorLUTAndGetIndex(segMetadata);
 
-  console.log("labelmapIndex : ", labelmapIndex)
-  console.log("ColorLUTIndex ", colorLUTIndex)
 
   setters.labelmap3DByFirstImageId(
     imageIds[0],

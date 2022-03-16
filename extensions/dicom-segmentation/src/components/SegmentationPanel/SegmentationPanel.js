@@ -24,6 +24,7 @@ import newSegment from '../../utils/newSegment'
 
 import {
   sendToServer,
+  createSegDisplaySet,
 } from '../../utils/mockMetadataTools';
 
 import SegmentationCustom from '../../utils/customGenerateToolState.js';
@@ -73,6 +74,7 @@ const SegmentationPanel = ({
   activeContexts = [],
   contexts = {},
 }) => {
+
   const isVTK = () => activeContexts.includes(contexts.VTK);
   const isCornerstone = () => activeContexts.includes(contexts.CORNERSTONE);
 
@@ -100,6 +102,10 @@ const SegmentationPanel = ({
     isLoading: false,
     isDisabled: true,
   });
+
+
+  // temporary uploaded segments that should be load as well
+  let labelMapListTmp = [];
 
   const getActiveViewport = () => viewports[activeIndex];
 
@@ -159,7 +165,7 @@ const SegmentationPanel = ({
     const allDisplaySets = studyMetadata.getDisplaySets();
     let selectedSegmentation;
     let newLabelmapIndex = getActiveLabelMapIndex();
-    // console.log('SegmentationPanel:: setActiveSegment -- ', allDisplaySets)
+
     allDisplaySets.forEach(displaySet => {
       if (displaySet.labelmapSegments) {
         Object.keys(displaySet.labelmapSegments).forEach(labelmapIndex => {
@@ -278,6 +284,7 @@ const SegmentationPanel = ({
       const brushStackState = getBrushStackState();
       if (brushStackState) {
         const labelMapList = getLabelMapList();
+        console.log(labelMapList, "in refreshSegmentation")
         const {
           items: segmentList,
           numbers: segmentNumbers,
@@ -325,7 +332,7 @@ const SegmentationPanel = ({
 
   const getLabelMapList = () => {
     const activeViewport = getActiveViewport();
-
+    let sopInstanceUIDs = [];
     /* Get list of SEG labelmaps specific to active viewport (reference series) */
     const referencedSegDisplaysets = _getReferencedSegDisplaysets(
       activeViewport.StudyInstanceUID,
@@ -334,8 +341,7 @@ const SegmentationPanel = ({
 
     const filteredReferencedSegDisplaysets = referencedSegDisplaysets.filter(
       (segDisplay => segDisplay.loadError !== true));
-
-    return filteredReferencedSegDisplaysets.map((displaySet, index) => {
+    const results = filteredReferencedSegDisplaysets.map((displaySet, index) => {
       const {
         labelmapIndex,
         originLabelMapIndex,
@@ -350,7 +356,7 @@ const SegmentationPanel = ({
       const date = moment(dateStr, 'YYYYMMDD:HHmmss');
       const displayDate = date.format('ddd, MMM Do YYYY, h:mm:ss a');
       const displayDescription = displaySet.SeriesDescription;
-
+      sopInstanceUIDs.push(metadata.SOPInstanceUID);
       return {
         value: hasOverlapping === true ? originLabelMapIndex : labelmapIndex,
         title: displayDescription,
@@ -371,6 +377,14 @@ const SegmentationPanel = ({
         },
       };
     });
+    console.log(labelMapListTmp)
+    labelMapListTmp.forEach( labelMap => {
+      if (!sopInstanceUIDs.includes(labelMap.metadata.SOPInstanceUID)) {
+          sopInstanceUIDs.push(labelMap.metadata.SOPInstanceUID)
+          results.push(labelMap);
+      }
+    });
+    return results;
   };
 
   const setCurrentSelectedSegment = segmentNumber => {
@@ -654,6 +668,8 @@ const SegmentationPanel = ({
     'shouldRenderInactiveLabelmaps',
   ];
 
+  console.log(require("dcmjs"))
+
   const selectedSegmentationOption = state.labelMapList.find(
     i => i.value === state.selectedSegmentation
   );
@@ -661,11 +677,10 @@ const SegmentationPanel = ({
   // Added functions
   const notification = UINotificationService.create({});
 
-  const callbackSegmentations = (dcm, save=true) => {
+  const callbackSegmentations = async (dcm, save=true) => {
     const dcmjs = require("dcmjs");
     const buffer = Buffer.from(dcm.write());
     var blob = new Blob([buffer], { type: 'text/plain;charset=utf-8' });
-
 
     const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
       dcm.dict
@@ -698,24 +713,22 @@ const SegmentationPanel = ({
         console.log("Current LabelMaps3D is empty... Loading new ")
       }
 
-
       const t0 = performance.now();
 
       const { Segmentation } = dcmjs.adapters.Cornerstone;
       const toolstate = Segmentation.generateToolState( imageIds ,
             parsed.byteArray.buffer, MetadataProvider)
 
-      console.log(toolstate)
+      const segDisplaySet = createSegDisplaySet(dataset, buffer.buffer);
 
+      const activeViewport = getActiveViewport();
+      await segDisplaySet.load(activeViewport, studies);
       const {
         labelmapBufferArray,
         segMetadata,
         segmentsOnFrame
       } = toolstate;
 
-      console.log(dataset)
-
-      // Add the new Label map -> not working ?
       setters.labelmap3DByFirstImageId(
           imageIds[0],
           labelmapBufferArray[0],
@@ -725,46 +738,56 @@ const SegmentationPanel = ({
           segmentsOnFrame
       );
 
-      // let labelmaplist = getLabelMapList();
-      // const hasOverlapping = false;
-      // const activatedLabelmapIndex = labelmaplist.length + 1;
-      // const dateStr = `${dataset.SeriesDate}:${dataset.SeriesTime}`.split('.')[0];
-      // const date = moment(dateStr, 'YYYYMMDD:HHmmss');
-      // const displayDate = date.format('ddd, MMM Do YYYY, h:mm:ss a');
-      // labelmaplist.push(
-      //   {
-      //     value: hasOverlapping === true ? originLabelMapIndex : activatedLabelmapIndex,
-      //     title: dataset.SeriesDescription,
-      //     description: displayDate,
-      //     metadata: dataset,
-      //     onClick: async () => {
-      //       setState(state => ({
-      //         ...state,
-      //         selectedSegmentation: activatedLabelmapIndex,
-      //       }));
-      //     },
-      //   });
-      //
-      // setState(state => ({
-      //   ...state,
-      //   labelMapList: labelmaplist,
-      //   selectedSegmentation: activatedLabelmapIndex,
-      // }));
+      let labelmaplist = getLabelMapList();
+      const hasOverlapping = false;
+      const activatedLabelmapIndex = labelmaplist.length + 1;
+      const dateStr = `${dataset.SeriesDate}:${dataset.SeriesTime}`.split('.')[0];
+      const date = moment(dateStr, 'YYYYMMDD:HHmmss');
+      const displayDate = date.format('ddd, MMM Do YYYY, h:mm:ss a');
+      const newElementLabelMap = {
+        value: hasOverlapping === true ? originLabelMapIndex : activatedLabelmapIndex,
+        title: dataset.SeriesDescription,
+        description: displayDate,
+        metadata: dataset,
+        onClick: async () => {
+          setState(state => ({
+            ...state,
+            selectedSegmentation: activatedLabelmapIndex,
+          }));
+        },
+      };
+      labelmaplist.push(newElementLabelMap);
+      labelMapListTmp.push(newElementLabelMap);
+      setActiveSegment(activatedLabelmapIndex)
+      setState(state => ({
+          ...state,
+          labelMapList: labelmaplist,
+          selectedSegmentation: activatedLabelmapIndex,
+        }));
+
+      const results = await setActiveLabelmap(
+        activeViewport,
+        studies,
+        segDisplaySet,
+        onSelectedSegmentationChange,
+        onDisplaySetLoadFailure
+      );
 
       const t1 = performance.now();
       console.log(`Decode SEG and load to cornerstone: ${t1-t0}`)
 
-      if (save) { sendToServer(dcm);}
-      refreshViewports();
+      if (save) {
+        sendToServer(dcm);
+        notification.show({
+          title: 'Loading Segmentation',
+          message: 'Success, Might need to refresh the page',
+          type: 'success',
+          duration: 2000,
+        });
+      }
+      console.log("Refresh View ?")
       refreshSegmentations();
-
-      notification.show({
-        title: 'Loading Segmentation',
-        message: 'Might need to refresh the page',
-        type: 'Success',
-        duration: 2000,
-      });
-
+      refreshViewports();
 
     } catch (err) {
       console.log(err)
@@ -812,18 +835,41 @@ const SegmentationPanel = ({
         sopInstanceUID: sopInstanceUID
       }
 
-      const instance = await dicomWeb.retrieveInstance(options)
-      var dicomData = dcmjs.data.DicomMessage.readFile(instance);
 
-      const callbackUpload = (dicomWeb, dicomDict, newDicomDict, removePrevious) => {
-          if (removePrevious){
-            // Needs to use another methods than the dicomWeb
-            console.log("TODO remove previous ?")
+      try {
+        const instance = await dicomWeb.retrieveInstance(options)
+        var dicomData = dcmjs.data.DicomMessage.readFile(instance);
+        const callbackUpload = (dicomWeb, dicomDict, newDicomDict, removePrevious) => {
+            if (removePrevious){
+              // Needs to use another methods than the dicomWeb
+              console.log("TODO remove previous ?")
+            }
+            callbackSegmentations(newDicomDict);
+        }
+        await uploadSegment(dicomWeb, dicomData, currentSegment, activeLabelMaps3D, callbackUpload);
+      }
+      catch {
+        console.log(currentSegment)
+        var dataset = currentSegment.metadata;
+        dataset._meta = {
+             MediaStorageSOPClassUID: {
+            Value: [ currentSegment.metadata.SOPClassUID],
+            vr: "UI",
+          },
+          MediaStorageSOPInstanceUID: {
+            Value: [ currentSegment.metadata.SOPInstanceUID],
+            vr: "UI",
+          },
+          TransferSyntaxUID: {
+              Value: ["1.2.840.10008.1.2.1"],
+              vr: "UI"
           }
-          callbackSegmentations(newDicomDict);
+        }
+        dataset.PixelData = activeLabelMaps3D.buffer;
+        const dicomData = dcmjs.data.datasetToDict(dataset)
+        sendToServer(dicomData)
       }
 
-      await uploadSegment(dicomWeb, dicomData, currentSegment, activeLabelMaps3D, callbackUpload);
 
     } catch (err) {
       console.log(err)
@@ -840,13 +886,6 @@ const SegmentationPanel = ({
 
   const createSegment = async () => {
     console.log('TODO : Create a new segment')
-    notification.show({
-      title: 'Create Segments',
-      message: 'Work in Progress',
-      type: 'warning',
-      duration: 2000,
-    });
-
     const config = {
       url: window.config.servers.dicomWeb[0].qidoRoot,
       // headers: DICOMWeb.getAuthorizationHeader(window.config.servers.dicomWeb[0]),
@@ -864,23 +903,23 @@ const SegmentationPanel = ({
 
 
     const dicomWeb = new api.DICOMwebClient(config);
-    var enabledSeriesMeta = await dicomWeb.retrieveSeriesMetadata({
-        studyInstanceUID: enabledStudyInstanceUID,
-        seriesInstanceUID: enabledSeriesInstanceUID,
-    })
-    var enabledSeries = await dicomWeb.retrieveSeries({
-        studyInstanceUID: enabledStudyInstanceUID,
-        seriesInstanceUID: enabledSeriesInstanceUID,
-    })
 
+    const enabledSeriesMeta = await dicomWeb.retrieveSeriesMetadata({
+      studyInstanceUID: enabledStudyInstanceUID,
+      seriesInstanceUID: enabledSeriesInstanceUID,
+    })
+    const enabledSeries = await dicomWeb.retrieveSeries({
+      studyInstanceUID: enabledStudyInstanceUID,
+      seriesInstanceUID: enabledSeriesInstanceUID,
+    })
 
     const callbackNewSegment = (dicomDerived) => {
       console.log("Callback new segment")
-      callbackSegmentations(dicomDerived, true);
+      callbackSegmentations(dicomDerived, false);
       notification.show({
         title: 'Create Segments',
         message: "Ready to be modified, don't forget to save",
-        type: 'warning',
+        type: 'success',
         duration: 9000,
       });
     }

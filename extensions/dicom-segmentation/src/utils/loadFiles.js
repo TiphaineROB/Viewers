@@ -190,6 +190,8 @@ export default async function loadFiles(
   const createDCM = (referencedInstance, referencedSeries, niiHeader, niiImage, modalValues) => {
     console.log("Create DCM with referencedseries and nii image and header")
 
+    console.log(niiHeader)
+
     let segments = {};
 
     let arrayImage = new Uint16Array(niiImage);
@@ -232,10 +234,12 @@ export default async function loadFiles(
               }
          };
     const referencedFrameNumbers = [];
-    for (var i = 0; i < numberOfFrames; i++){
-      referencedFrameNumbers.push(i+1);
+    for (var i = numberOfFrames; i > 0; i--){
+      referencedFrameNumbers.push(i);
     }
-    addSegment(segment, derivated, arrayImage, referencedFrameNumbers)
+    
+    const packedarray = dcmjs.data.BitArray.pack(arrayImage)
+    addSegment(segment, derivated, packedarray, referencedFrameNumbers)
 
     derivated.dataset._meta = {
         MediaStorageSOPClassUID: {
@@ -258,13 +262,13 @@ export default async function loadFiles(
 
     let bufferDerived = Buffer.from(dicomDerived.write());
 
-    var FileSaver = require('file-saver');
-    let filename = `test.dcm`
-    var blobDerived = new Blob([bufferDerived], { type: 'text/plain;charset=utf-8' });
-
-    const derivedParsed = dicomParser.parseDicom(bufferDerived);
-
-    FileSaver.saveAs(blobDerived, filename);
+    // var FileSaver = require('file-saver');
+    // let filename = `test.dcm`
+    // var blobDerived = new Blob([bufferDerived], { type: 'text/plain;charset=utf-8' });
+    //
+    // const derivedParsed = dicomParser.parseDicom(bufferDerived);
+    //
+    // FileSaver.saveAs(blobDerived, filename);
 
     // const t0 = performance.now();
     // let bufferImg = Buffer.from(arrayImage);
@@ -274,9 +278,6 @@ export default async function loadFiles(
     // console.log("Conversion array to json : ", t1-t0);
 
     //const dicomDict = dcmjs.data.datasetToDict(dataset)
-
-
-
     //let buffer = Buffer.from(dicomDict.write());
     // var blob = new Blob([buffer], { type: 'text/plain;charset=utf-8' });
     // const dicomparsed = dicomParser.parseDicom(buffer);

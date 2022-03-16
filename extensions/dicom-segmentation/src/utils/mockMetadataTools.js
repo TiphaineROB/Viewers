@@ -5,9 +5,19 @@ import CornerstoneViewport from 'react-cornerstone-viewport';
 import { UINotificationService } from '@ohif/core';
 import { api } from 'dicomweb-client';
 
-const { studyMetadataManager, xhrRetryRequestHook} = utils;
+const { studyMetadataManager, xhrRetryRequestHook, DicomLoaderService } = utils;
 const { getXHRRetryRequestHook } = xhrRetryRequestHook;
+import getSourceDisplaySet from '../getSourceDisplaySet';
 
+import {
+  _parseSeg,
+  _getImageIdsForDisplaySet,
+} from '../getOHIFDicomSegSopClassHandler';
+
+import loadSegmentation from '../loadSegmentation';
+
+import dcmjs from 'dcmjs';
+const { DicomMessage, DicomMetaDictionary } = dcmjs.data;
 
 
 /**
@@ -41,6 +51,11 @@ export async function sendToServer(dicomDict) {
   //   type: 'success',
   //   duration: 2000,
   // });
+
+  var FileSaver = require('file-saver');
+  let filename = `test-toserver.dcm`
+  var blob = new Blob([part10Buffer], { type: 'text/plain;charset=utf-8' });
+  FileSaver.saveAs(blob, filename);
 }
 
 /**
@@ -114,6 +129,116 @@ export function getTime() {
   }
   const fulltime = hour+mins+secs
   return fulltime;
+}
+
+/**
+ *
+ *
+ * @param {*} dataset
+ * @param {*} dicomBuffer
+ * @returns
+ *
+ */
+export function createSegDisplaySet(dataset, dicomBuffer) {
+  const {
+    SeriesDate,
+    SeriesTime,
+    SeriesDescription,
+    FrameOfReferenceUID,
+    SOPInstanceUID,
+    SeriesInstanceUID,
+    StudyInstanceUID,
+    SeriesNumber,
+    PixelData,
+  } = dataset;
+
+  const segDisplaySet = {
+    Modality: 'SEG',
+    displaySetInstanceUID: utils.guid(),
+    SOPInstanceUID,
+    SeriesInstanceUID,
+    StudyInstanceUID,
+    FrameOfReferenceUID,
+    // authorizationHeaders,
+    isDerived: true,
+    referencedDisplaySetUID: null, // Assigned when loaded.
+    labelmapIndex: null, // Assigned when loaded.
+    isLoaded: false,
+    loadError: false,
+    hasOverlapping: false,
+    dicomBuffer: dicomBuffer,
+    SeriesDate,
+    SeriesTime,
+    SeriesNumber,
+    SeriesDescription,
+    dataset,
+  };
+
+  segDisplaySet.getSourceDisplaySet = function(studies, activateLabelMap = true, onDisplaySetLoadFailureHandler) {
+    return getSourceDisplaySet(studies, segDisplaySet, activateLabelMap, onDisplaySetLoadFailureHandler);
+  };
+
+  segDisplaySet.load = async function(referencedDisplaySet, studies) {
+    segDisplaySet.isLoaded = true;
+    const { StudyInstanceUID } = referencedDisplaySet;
+    const segArrayBuffer = segDisplaySet.dicomBuffer;
+
+    const dicomData = DicomMessage.readFile(segArrayBuffer);
+    const dataset = DicomMetaDictionary.naturalizeDataset(dicomData.dict);
+    dataset._meta = DicomMetaDictionary.namifyDataset(dicomData.meta);
+    console.log(_getImageIdsForDisplaySet)
+
+    const imageIds = _getImageIdsForDisplaySet(
+      studies,
+      StudyInstanceUID,
+      referencedDisplaySet.SeriesInstanceUID
+    );
+
+    const results = await _parseSeg(segArrayBuffer, imageIds);
+    if (results === undefined) {
+      return;
+    }
+    const {
+      labelmapBufferArray,
+      segMetadata,
+      segmentsOnFrame,
+      segmentsOnFrameArray,
+    } = results;
+    let labelmapIndex;
+    if (labelmapBufferArray.length > 1) {
+      let labelmapIndexes = [];
+      for (let i = 0; i < labelmapBufferArray.length; ++i) {
+        labelmapIndexes.push(
+          await loadSegmentation(
+            imageIds,
+            segDisplaySet,
+            labelmapBufferArray[i],
+            segMetadata,
+            segmentsOnFrame,
+            segmentsOnFrameArray[i]
+          )
+        );
+      }
+      /**
+       * Since overlapping segments have virtual labelmaps,
+       * originLabelMapIndex is used in the panel to select the correct dropdown value.
+       */
+      segDisplaySet.hasOverlapping = true;
+      segDisplaySet.originLabelMapIndex = labelmapIndexes[0];
+      labelmapIndex = labelmapIndexes[0];
+      console.warn('Overlapping segments!');
+    } else {
+      labelmapIndex = await loadSegmentation(
+        imageIds,
+        segDisplaySet,
+        labelmapBufferArray[0],
+        segMetadata,
+        segmentsOnFrame,
+        []
+      );
+    }
+  };
+  return segDisplaySet;
 }
 
 /**

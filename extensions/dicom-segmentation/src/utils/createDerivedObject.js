@@ -149,7 +149,6 @@ export function _addPerFrameFunctionalGroups(
 
     for (let i = 0; i < referencedFrameNumbers.length; i++) {
         const frameNumber = referencedFrameNumbers[i];
-        console.log(frameNumber, referencedFrameNumbers)
         const perFrameFunctionalGroups = {};
 
         // referencedDataset does not contain PlanePositionSequence ??
@@ -159,7 +158,7 @@ export function _addPerFrameFunctionalGroups(
                   frameNumber-1
               ].PlanePositionSequence
           );
-          
+
           // If the PlaneOrientationSequence is not in the SharedFunctionalGroupsSequence,
           // extract it from the PerFrameFunctionalGroupsSequence.
           if (
@@ -174,7 +173,6 @@ export function _addPerFrameFunctionalGroups(
           }
         } else { // If not referencedDataset.PerFrameFunctionalGroupSequence
 
-          console.log(frameNumber)
           perFrameFunctionalGroups.PlanePositionSequence = {
             ImagePositionPatient:   dcmjs.derivations.DerivedDataset.copyDataset(
                   derivated.referencedDatasets[frameNumber-1].ImagePositionPatient
@@ -210,7 +208,7 @@ export function _addPerFrameFunctionalGroups(
         }
 
         perFrameFunctionalGroups.FrameContentSequence = {
-            DimensionIndexValues: [ReferencedSegmentNumber, frameNumber]
+            DimensionIndexValues: [ReferencedSegmentNumber, i+1]
         };
 
         perFrameFunctionalGroups.SegmentIdentificationSequence = {
