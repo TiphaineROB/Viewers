@@ -32,7 +32,8 @@ import {
 /**
  *
  *
-* @param {*} enabledSeries
+ * @param {*} enabledSeries
+ * @param {*} currentDisplaySet
  * @param {*} enabledSeriesMeta
  * @param {*} callback
  * @returns
@@ -40,6 +41,7 @@ import {
  */
 export default async function newSegment(
   enabledSeries,
+  currentDisplaySet,
   enabledSeriesMeta,
   callback
 ) {
@@ -76,14 +78,14 @@ export default async function newSegment(
     const numberOfFrames = enabledSeries.length;
 
     derivated = setNumberOfFrames(derivated, numberOfFrames);
+    derivated.dataset.ContentDescription = description;
+    derivated.dataset.SeriesDescription = "SEG "+ description +' - Empty'
 
-    const rgbcolor = hexToRgb(color);
-    const recommendedCIELabValues = dcmjs.data.Colors.rgb2DICOMLAB([
-        rgbcolor.r,
-        rgbcolor.g,
-        rgbcolor.b
-    ]);
+    let rgbcolor = hexToRgb(color);
+    rgbcolor = [ rgbcolor.r/255, rgbcolor.g/255, rgbcolor.b/255];
+    const recommendedCIELabValues = dcmjs.data.Colors.rgb2DICOMLAB(rgbcolor);
 
+    derivated.dataset.InstanceNumber=1;
     const segment =  {
              SegmentedPropertyCategoryCodeSequence: {
                   CodeValue: "123037004",
@@ -106,13 +108,23 @@ export default async function newSegment(
 
     const referencedFrameNumbers = [];
     for (var i = 0; i < numberOfFrames; i++){
-      referencedFrameNumbers.push(i+1);
+      const instanceNumber = currentDisplaySet.images[i]._data.metadata.InstanceNumber;
+      referencedFrameNumbers.push(instanceNumber);
     }
 
-    const emptyArray = new Uint8Array(
-      derivated.dataset.PixelData
+    console.log(enabledSeries)
+
+    const emptyArray = new Uint16Array(
+      derivated.dataset.Columns * derivated.dataset.Rows * derivated.dataset.NumberOfFrames
     )
-    addSegment(segment, derivated, emptyArray, referencedFrameNumbers)
+
+    // console.log(derivated.dataset.Columns, derivated.dataset.Rows, derivated.dataset.NumberOfFrames)
+    // console.log(emptyArray)
+
+    const packedarray = dcmjs.data.BitArray.pack(emptyArray)
+
+    // console.log(packedarray)
+    addSegment(segment, derivated, packedarray, referencedFrameNumbers)
 
     derivated.dataset._meta = {
          MediaStorageSOPClassUID: {
@@ -132,7 +144,13 @@ export default async function newSegment(
         PixelData: "OB"
     }
     const dicomDerived = dcmjs.data.datasetToDict(derivated.dataset)
-    console.log(derivated.dataset)
+
+    const part10Buffer = dicomDerived.write();
+
+    var FileSaver = require('file-saver');
+    let filename = `test-toserver.dcm`
+    var blob = new Blob([part10Buffer], { type: 'text/plain;charset=utf-8' });
+    FileSaver.saveAs(blob, filename);
     callback(dicomDerived)
   }
 

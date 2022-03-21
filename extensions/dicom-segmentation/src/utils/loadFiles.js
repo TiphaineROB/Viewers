@@ -31,12 +31,14 @@ import {
  *
  *
  * @param {*} file
+ * @param {*} currentDisplaySet
  * @param {*} callback
  * @returns
  *
  */
 export default async function loadFiles(
   file,
+  currentDisplaySet,
   callback
 ) {
   const notification = UINotificationService.create({});
@@ -188,12 +190,7 @@ export default async function loadFiles(
   }
 
   const createDCM = (referencedInstance, referencedSeries, niiHeader, niiImage, modalValues) => {
-    console.log("Create DCM with referencedseries and nii image and header")
-
-    console.log(niiHeader)
-
     let segments = {};
-
     let arrayImage = new Uint16Array(niiImage);
 
     // First option
@@ -205,14 +202,10 @@ export default async function loadFiles(
     var derivated = createDerivedObject(referencedSeries);
     const numberOfFrames = niiHeader.dims[3];
     derivated = setNumberOfFrames(derivated, numberOfFrames);
-    // console.log(derivated)
 
-    const rgbcolor = hexToRgb(modalValues.color);
-    const recommendedCIELabValues = dcmjs.data.Colors.rgb2DICOMLAB([
-        rgbcolor.r,
-        rgbcolor.g,
-        rgbcolor.b
-    ]);
+    let rgbcolor = hexToRgb(modalValues.color);
+    rgbcolor = [ rgbcolor.r/255, rgbcolor.g/255, rgbcolor.b/255];
+    const recommendedCIELabValues = dcmjs.data.Colors.rgb2DICOMLAB(rgbcolor);
 
     const segment =  {
              SegmentedPropertyCategoryCodeSequence: {
@@ -234,13 +227,14 @@ export default async function loadFiles(
               }
          };
     const referencedFrameNumbers = [];
-    for (var i = numberOfFrames; i > 0; i--){
-      referencedFrameNumbers.push(i);
+    for (var i = 0; i < numberOfFrames; i++){
+      const instanceNumber = currentDisplaySet.images[i]._data.metadata.InstanceNumber;
+      referencedFrameNumbers.push(instanceNumber);
     }
-    
+
     const packedarray = dcmjs.data.BitArray.pack(arrayImage)
     addSegment(segment, derivated, packedarray, referencedFrameNumbers)
-
+    derivated.dataset.SeriesDescription = "SEG "+ modalValues.description +' - 1 '
     derivated.dataset._meta = {
         MediaStorageSOPClassUID: {
         Value: [ derivated.dataset.SOPClassUID],

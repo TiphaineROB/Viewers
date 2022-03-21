@@ -165,6 +165,7 @@ export function _addPerFrameFunctionalGroups(
               derivated.dataset.SharedFunctionalGroupsSequence[0]
                 .PlaneOrientationSequence === undefined
           ) { // Might be an error ?
+            console.log(frameNumber)
             perFrameFunctionalGroups.PlaneOrientationSequence = dcmjs.derivations.DerivedDataset.copyDataset(
                   derivated.referencedDataset.PerFrameFunctionalGroupsSequence[
                         frameNumber-1
@@ -345,6 +346,7 @@ export function _addSegmentMetadata(derivated, Segment) {
     }
 
     SegmentSequence.push(reNumberedSegmentCopy);
+
     derivated.dataset.SegmentSequence = SegmentSequence;
     return  reNumberedSegmentCopy.SegmentNumber;
 }

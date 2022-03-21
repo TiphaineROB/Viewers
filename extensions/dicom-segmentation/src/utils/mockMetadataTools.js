@@ -186,7 +186,7 @@ export function createSegDisplaySet(dataset, dicomBuffer) {
     const dicomData = DicomMessage.readFile(segArrayBuffer);
     const dataset = DicomMetaDictionary.naturalizeDataset(dicomData.dict);
     dataset._meta = DicomMetaDictionary.namifyDataset(dicomData.meta);
-    console.log(_getImageIdsForDisplaySet)
+    // console.log(_getImageIdsForDisplaySet)
 
     const imageIds = _getImageIdsForDisplaySet(
       studies,

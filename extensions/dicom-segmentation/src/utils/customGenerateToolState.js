@@ -291,6 +291,7 @@ function generateToolState(
     dataset._meta = DicomMetaDictionary.namifyDataset(dicomData.meta);
     const multiframe = Normalizer.normalizeToDataset([dataset]);
 
+
     const imagePlaneModule = metadataProvider.get(
         "imagePlaneModule",
         imageIds[0]
@@ -453,8 +454,8 @@ function insertPixelDataPerpendicular(
         imageIds[imageIds.length - 1]
     );
 
-    console.log(firstImagePlaneModule);
-    console.log(lastImagePlaneModule);
+    // console.log(firstImagePlaneModule);
+    // console.log(lastImagePlaneModule);
 
     const corners = [
         ...getCorners(firstImagePlaneModule),
@@ -1072,7 +1073,6 @@ function insertPixelDataPlanar(
         ? SharedFunctionalGroupsSequence.PlaneOrientationSequence
               .ImageOrientationPatient
         : undefined;
-    console.log(sharedImageOrientationPatient)
     const sliceLength = Columns * Rows;
     let multiframePixelData;
     if (Array.isArray(multiframe.PixelData)) {

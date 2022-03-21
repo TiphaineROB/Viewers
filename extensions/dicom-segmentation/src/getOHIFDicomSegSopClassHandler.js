@@ -41,6 +41,7 @@ export default function getSopClassHandlerModule({ servicesManager }) {
         SeriesInstanceUID,
         StudyInstanceUID,
         SeriesNumber,
+        ContentDescription,
       } = metadata;
 
       const segDisplaySet = {
@@ -63,6 +64,7 @@ export default function getSopClassHandlerModule({ servicesManager }) {
         SeriesTime,
         SeriesNumber,
         SeriesDescription,
+        ContentDescription,
         metadata,
       };
 
@@ -150,7 +152,7 @@ export function _parseSeg(arrayBuffer, imageIds) {
         arrayBuffer,
         cornerstone.metaData
       );
-    console.log("End custom function ", customResultGenerateToolState)
+    // console.log("End custom function ", customResultGenerateToolState)
     return customResultGenerateToolState;
   // }
   // return defaultGenerateToolState;
