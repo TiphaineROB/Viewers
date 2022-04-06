@@ -1,8 +1,31 @@
 window.config = {
   routerBasename: '/',
   showStudyList: true,
+  filterQueryParam: false,
+  disableServersCache: false,
+  studyPrefetcher: {
+    enabled: true,
+    order: 'closest',
+    displaySetCount: 3,
+    preventCache: false,
+    prefetchDisplaySetsTimeout: 300,
+    maxNumPrefetchRequests: 100,
+    displayProgress: true,
+    includeActiveDisplaySet: true,
+  },
   servers: {
     dicomWeb: [
+      // {
+      //   name: 'DCM4CHEE',
+      //   wadoUriRoot: 'https://covid.creatis.insa-lyon.fr/dcm4chee-arc/aets/DCM4CHEE/wado',
+      //   qidoRoot: 'https://covid.creatis.insa-lyon.fr/dcm4chee-arc/aets/DCM4CHEE/rs',
+      //   wadoRoot: 'https://covid.creatis.insa-lyon.fr/dcm4chee-arc/aets/DCM4CHEE/rs',
+      //   qidoSupportsIncludeField: true,
+      //   imageRendering: 'wadors',
+      //   thumbnailRendering: 'wadors',
+      //   enableStudyLazyLoad: true,
+      //   supportsFuzzyMatching: true,
+      // },
       {
         name: 'Orthanc',
         wadoUriRoot: '/wado',
@@ -14,4 +37,6 @@ window.config = {
       },
     ],
   },
+  authenticationRequired: true,
+  authenticationServer: 'http://localhost:8080/api/v1/',
 };

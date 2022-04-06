@@ -97,8 +97,8 @@ export default class GirderRadiomicsPanel extends Component {
       orthanc: 'http://localhost/proxy/dicom-web',
       login: log,
       psswd: pwd,
+      token: CookieUtils.getCookie("AUTH_SERVER_KEY"),
     }
-    console.log(log, pwd)
     if ( log === null || log === '' || pwd === null || pwd === ''){
       this.notification.show({
         title: 'Girder Radiomics',
@@ -171,7 +171,7 @@ export default class GirderRadiomicsPanel extends Component {
     return (
       <div className="girderRadiomicsPanel">
 
-        <p> <b> Girder Extension </b> </p>
+        <h3> <b> Girder Extension </b> </h3>
         <p style={{ fontSize: 'smaller' }}>
            Enables connection to a Girder platform to use PyRadiomics and
            segmentation models.

@@ -220,7 +220,7 @@ export async function uploadNewSegment(
 
   newseg.dataset._meta = _meta;
   newseg.dataset._vrMap = _vrMap;
-
+  newseg.dataset.InstanceNumber=1;
 
   if (newseg.dataset.SeriesDescription.includes("Empty"))
   {

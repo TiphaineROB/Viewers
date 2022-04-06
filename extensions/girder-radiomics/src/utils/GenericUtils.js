@@ -70,7 +70,7 @@ export class CookieUtils {
 
   static getCookieString(name, defaultVal = '') {
     const val = CookieUtils.getCookie(name); // can return undefined as a string
-    console.debug(name + ' = ' + val + ' (default: ' + defaultVal + ' )');
+    // console.debug(name + ' = ' + val + ' (default: ' + defaultVal + ' )');
     if (val == null || val === "undefined" || val =='') {
       CookieUtils.setCookie(name, defaultVal);
       return defaultVal;

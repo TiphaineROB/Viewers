@@ -12,12 +12,11 @@ import { UIModalService, UINotificationService } from '@ohif/core';
 import SegmentationLabelForm from '../components/SegmentationForm/SegmentationLabelForm';
 import PromiseModal from '../components/modal';
 
-import createJsonDCM from './createJsonDCM.js';
-
 import {
   sendToServer,
   removeFromServer,
   hexToRgb,
+  createJsonDCM,
 } from './mockMetadataTools';
 
 
@@ -194,9 +193,9 @@ export default async function loadFiles(
     let arrayImage = new Uint16Array(niiImage);
 
     // First option
-    const jsonDataset = createJsonDCM(referencedSeries, niiHeader, modalValues)
-    const dataset = JSON.parse(jsonDataset);
-    dataset.PixelData = arrayImage.buffer;
+    //const jsonDataset = createJsonDCM(referencedSeries, niiHeader, modalValues)
+    //const dataset = JSON.parse(jsonDataset);
+    //dataset.PixelData = arrayImage.buffer;
 
     // Second option - cleaner
     var derivated = createDerivedObject(referencedSeries);
@@ -235,6 +234,7 @@ export default async function loadFiles(
     const packedarray = dcmjs.data.BitArray.pack(arrayImage)
     addSegment(segment, derivated, packedarray, referencedFrameNumbers)
     derivated.dataset.SeriesDescription = "SEG "+ modalValues.description +' - 1 '
+    derivated.dataset.InstanceNumber=1;
     derivated.dataset._meta = {
         MediaStorageSOPClassUID: {
         Value: [ derivated.dataset.SOPClassUID],

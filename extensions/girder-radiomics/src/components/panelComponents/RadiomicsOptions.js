@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { CookieUtils } from '../../utils/GenericUtils';
 import './RadiomicsOptions.styl';
 import BaseTab from './BaseTab';
 
@@ -81,6 +81,7 @@ export default class RadiomicsOptions extends BaseTab {
         collection: '61f7b3ade525b9309f549de2',
         login: this.props.login.value,
         psswd: this.props.password.value,
+        token: CookieUtils.getCookie("AUTH_SERVER_KEY"),
       }
       const response = await this.props.client().get_radiomics(params);
       console.log(response)
@@ -138,7 +139,7 @@ export default class RadiomicsOptions extends BaseTab {
   currentSeg = () => {
     return this.state.currentSeg
       ? this.state.currentSeg
-      : this.props.viewSegments[0];
+      : null;
   };
   // <td width="75%">
   //   <button
@@ -213,7 +214,8 @@ export default class RadiomicsOptions extends BaseTab {
                       onChange={this.onChangeSeg}
                       value={currentSeg}
                     >
-                      {this.props.viewSegments.map(model => (
+                      {
+                        this.props.viewSegments && this.props.viewSegments.map(model => (
                         <option key={model} name={model} value={model}>
                           {`${model} `}
                         </option>

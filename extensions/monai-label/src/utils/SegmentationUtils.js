@@ -38,6 +38,7 @@ function getImageIdsForDisplaySet(
  * @param element
  */
 function getLabelMaps(element) {
+  console.log(element)
   let labelmaps = [];
   if (!element) {
     console.warn('element is empty... weird...');
