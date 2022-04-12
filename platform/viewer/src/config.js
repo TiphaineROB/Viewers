@@ -48,8 +48,10 @@ export function setConfiguration(appConfig) {
 
       if (headers.Authorization) {
         xhr.setRequestHeader('Authorization', headers.Authorization);
-        xhr.setRequestHeader('ServerURL', headers.ServerURL);
-        xhr.setRequestHeader('ServerToken', headers.ServerToken);
+        if (window.config.serversType!="PACS"){
+          xhr.setRequestHeader('ServerURL', headers.ServerURL);
+          xhr.setRequestHeader('ServerToken', headers.ServerToken);
+        }
       }
     },
     errorInterceptor: error => {

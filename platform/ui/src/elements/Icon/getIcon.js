@@ -98,6 +98,11 @@ import envelopeSquare from './icons/envelope-square.svg';
 // 'circle-arrow-down': circleArrowDownSolid,
 // 'circle-chevron-up': circleChevronDownSolid,
 // 'circle-chevron-down': circleChevronUpSolid,
+
+//import logoCreatisInverse from './icons/logo-creatis-inverse.svg'
+import creatisQuadriLogoInvertNew from './icons/creatis_quadri_logo_invert_new.svg'
+import awesommeTextLogo from './icons/awesomme-text-logo.svg'
+
 const ICONS = {
   eye,
   'eye-closed': eyeClosed,
@@ -186,7 +191,9 @@ const ICONS = {
   'soft-tissue': softTissue,
   lung,
   liver,
-  save: saveRegular
+  save: saveRegular,
+  "creatis-logo": creatisQuadriLogoInvertNew,//logoCreatisInverse,
+  "awesomme-text": awesommeTextLogo,
 };
 
 /**

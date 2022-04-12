@@ -45,7 +45,6 @@ import { version } from '../package.json';
 
 import OHIFMONAILabelExtension from '@ohif/extension-monai-label';
 import OHIFGirderRadiomicsExtension from '@ohif/extension-girder-radiomics';
-import OHIFAuthenticationFormExtension from '@ohif/extension-authentication-form';
 
 /*
  * Default Settings
@@ -61,7 +60,6 @@ const appProps = {
   config,
   defaultExtensions: [
     OHIFGirderRadiomicsExtension,
-    OHIFAuthenticationFormExtension,
     //OHIFMONAILabelExtension,
     OHIFVTKExtension,
     OHIFDicomHtmlExtension,
@@ -91,7 +89,7 @@ function startAuth() {
     window.config.user.key = '';
     let url = new URL('authOhif', window.config.authenticationServer);
     axios
-      .get(url, {})
+      .post(url, {})
       .then(function(response) {
         if (response.data.token==='') {
           window.config.user.key = '';

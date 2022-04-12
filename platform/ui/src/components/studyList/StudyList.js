@@ -19,6 +19,10 @@ const getContentFromUseMediaValue = (
 
   return content;
 };
+
+import axios from 'axios';
+const TEST = [true, false, true, true];
+
 /**
  *
  *
@@ -38,9 +42,16 @@ function StudyList(props) {
     studyListDateFilterNumDays,
     displaySize,
   } = props;
+
   const { t, ready: translationsAreReady } = useTranslation('StudyList');
 
   const largeTableMeta = [
+    {
+      displayText: t('Access'),
+      fieldName: 'AccessAuth',
+      inputType: 'bool',
+      size: 100,
+    },
     {
       displayText: t('PatientName'),
       fieldName: 'PatientName',
@@ -81,6 +92,12 @@ function StudyList(props) {
 
   const mediumTableMeta = [
     {
+      displayText: t('Access'),
+      fieldName: 'AccessAuth',
+      inputType: 'bool',
+      size: 50,
+    },
+    {
       displayText: `${t('PatientName')} / ${t('MRN')}`,
       fieldName: 'patientNameOrId',
       inputType: 'text',
@@ -102,6 +119,12 @@ function StudyList(props) {
 
   const smallTableMeta = [
     {
+      displayText: t('Access'),
+      fieldName: 'AccessAuth',
+      inputType: 'bool',
+      size: 20,
+    },
+    {
       displayText: t('Search'),
       fieldName: 'allFields',
       inputType: 'text',
@@ -118,6 +141,8 @@ function StudyList(props) {
   const totalSize = tableMeta
     .map(field => field.size)
     .reduce((prev, next) => prev + next);
+
+ // TODO Filter the studies regarding the accessAuthorized function
 
   return translationsAreReady ? (
     <table className="table table--striped table--hoverable">
@@ -181,6 +206,7 @@ function StudyList(props) {
               key={`${study.StudyInstanceUID}-${index}`}
               onClick={StudyInstanceUID => handleSelectItem(StudyInstanceUID)}
               AccessionNumber={study.AccessionNumber || ''}
+              AccessAuth={study.UserHasAccess}
               modalities={study.modalities}
               PatientID={study.PatientID || ''}
               PatientName={study.PatientName || ''}
@@ -227,10 +253,21 @@ StudyList.propTypes = {
 
 StudyList.defaultProps = {};
 
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
+import { faLockOpen } from '@fortawesome/free-solid-svg-icons'
+import { library } from "@fortawesome/fontawesome-svg-core";
+
+library.add(faLock)
+library.add(faUnlock)
+library.add(faLockOpen)
+
 function TableRow(props) {
   const {
     AccessionNumber,
     isHighlighted,
+    AccessAuth,
     modalities,
     PatientID,
     PatientName,
@@ -242,12 +279,45 @@ function TableRow(props) {
   } = props;
 
   const { t } = useTranslation('StudyList');
+  let authorized;
+  // const accessAuthorized = async (studyInstanceUID) => {
+  //   if (window.config.authenticationRequired) {
+  //     const uri_params = {
+  //       baseURL: window.config.authenticationServer,
+  //       params: {
+  //         token: window.config.user.key,
+  //         studyID: studyInstanceUID,
+  //       }
+  //     }
+  //     const ax_rest = axios.create(uri_params);
+  //     let access = await ax_rest.get("/authOhif", {}).then(function(r) { return r.data; });
+  //     console.log(access)
+  //     return access;
+  //     // return access;
+  //   }
+  //   return true;
+  //
+  // }
+  // const test = accessAuthorized(StudyInstanceUID);
+  // console.log(test)
+  if (AccessAuth) {
+    authorized = <div style={{color:"#88b160"}}> <FontAwesomeIcon icon="lock-open"/> </div>
+  } else {
+    authorized = <div style={{color:"#b14140"}}> <FontAwesomeIcon icon="lock"/> </div>
+  }
+  const fctOnClick = (AccessAuth) => {
+    console.log(AccessAuth)
+    if (AccessAuth  ) {
 
+      handleClick(StudyInstanceUID)
+    }
+  }
   const largeRowTemplate = (
     <tr
-      onClick={() => handleClick(StudyInstanceUID)}
+      onClick={fctOnClick}
       className={classNames({ active: isHighlighted })}
     >
+      <td style={{ textAlign: 'center' }}>{authorized}</td>
       <td className={classNames({ 'empty-value': !PatientName })}>
         {PatientName || `(${t('Empty')})`}
       </td>
@@ -263,9 +333,10 @@ function TableRow(props) {
 
   const mediumRowTemplate = (
     <tr
-      onClick={() => handleClick(StudyInstanceUID)}
+      onClick={fctOnClick}
       className={classNames({ active: isHighlighted })}
     >
+      <td style={{ textAlign: 'center' }}>{authorized}</td>
       <td className={classNames({ 'empty-value': !PatientName })}>
         {PatientName || `(${t('Empty')})`}
         <div style={{ color: '#60656f' }}>{PatientID}</div>
@@ -323,16 +394,23 @@ function TableRow(props) {
 
   const smallRowTemplate = (
     <tr
-      onClick={() => handleClick(StudyInstanceUID)}
+      onClick={fctOnClick}
       className={classNames({ active: isHighlighted })}
     >
+      <td>
+        <div>
+          {authorized}
+        </div>
+      </td>
       <td style={{ position: 'relative', overflow: 'hidden' }}>
+
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           {/* NAME AND ID */}
           <div
             className={classNames({ 'empty-value': !PatientName })}
             style={{ width: '150px', minWidth: '150px' }}
           >
+
             <div style={{ fontWeight: 500, paddingTop: '3px' }}>
               {PatientName || `(${t('Empty')})`}
             </div>
@@ -393,6 +471,7 @@ function TableRow(props) {
 TableRow.propTypes = {
   AccessionNumber: PropTypes.string.isRequired,
   isHighlighted: PropTypes.bool,
+  AccessAuth: PropTypes.bool,
   modalities: PropTypes.string,
   PatientID: PropTypes.string.isRequired,
   PatientName: PropTypes.string.isRequired,

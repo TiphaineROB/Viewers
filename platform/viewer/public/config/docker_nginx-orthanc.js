@@ -37,6 +37,7 @@ window.config = {
       },
     ],
   },
+  // serversType: "PACS",
   authenticationRequired: true,
   authenticationServer: 'http://localhost:8080/api/v1/',
 };

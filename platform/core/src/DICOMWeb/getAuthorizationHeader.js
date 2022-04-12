@@ -15,6 +15,7 @@ import AuthenticationForm from '@ohif/extension-authentication-form'
 export default function getAuthorizationHeader({ requestOptions } = {}) {
   const headers = {};
 
+
   // Check for OHIF.user since this can also be run on the server
   const accessToken = user && user.getAccessToken && user.getAccessToken();
 
@@ -46,6 +47,9 @@ export default function getAuthorizationHeader({ requestOptions } = {}) {
   //   CookieUtils.setCookie('AUTH_SERVER_URL', headers.GirderURL);
   // }
   headers.Authorization = "Bearer Test"
+  if (window.config.serversType === "PACS"){
+    return headers;
+  }
   headers.ServerToken = window.config.user.key;
   headers.ServerURL = window.config.authenticationServer;
   return headers;

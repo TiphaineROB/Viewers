@@ -876,7 +876,7 @@ const SegmentationPanel = ({
   const createSegment = async () => {
     const config = {
       url: window.config.servers.dicomWeb[0].qidoRoot,
-      // headers: DICOMWeb.getAuthorizationHeader(window.config.servers.dicomWeb[0]),
+      headers: DICOMWeb.getAuthorizationHeader(),
     };
 
     var enabledElement = cornerstoneTools.external.cornerstone.getEnabledElements()[0];
@@ -888,7 +888,6 @@ const SegmentationPanel = ({
     var splitImageId = enabledImageId.split('/');
     const enabledStudyInstanceUID = splitImageId[2];
     const enabledSeriesInstanceUID = splitImageId[4];
-
 
     const dicomWeb = new api.DICOMwebClient(config);
 
@@ -903,6 +902,7 @@ const SegmentationPanel = ({
 
     const callbackNewSegment = (dicomDerived) => {
       const labelMapsList = getLabelMapList();
+      console.log("callbacknewsegment")
       let upload=false;
       callbackSegmentations(dicomDerived, upload);
       notification.show({

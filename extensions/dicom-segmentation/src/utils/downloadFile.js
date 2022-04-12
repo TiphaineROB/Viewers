@@ -1,4 +1,4 @@
-import { utils, log } from '@ohif/core';
+import { utils, log, DICOMWeb} from '@ohif/core';
 import cornerstoneTools from 'cornerstone-tools';
 import cornerstone from 'cornerstone-core';
 
@@ -21,7 +21,7 @@ export default function downloadFile(
 
   const config = {
     url: window.config.servers.dicomWeb[0].qidoRoot,
-    // headers: DICOMWeb.getAuthorizationHeader(window.config.servers.dicomWeb[0]),
+    headers: DICOMWeb.getAuthorizationHeader(),
   };
   const dicomWeb = new api.DICOMwebClient(config);
 

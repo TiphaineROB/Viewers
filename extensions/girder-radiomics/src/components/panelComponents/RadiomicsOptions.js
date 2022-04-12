@@ -81,7 +81,7 @@ export default class RadiomicsOptions extends BaseTab {
         collection: '61f7b3ade525b9309f549de2',
         login: this.props.login.value,
         psswd: this.props.password.value,
-        token: CookieUtils.getCookie("AUTH_SERVER_KEY"),
+        token: window.config.user.key,//CookieUtils.getCookie("AUTH_SERVER_KEY"),
       }
       const response = await this.props.client().get_radiomics(params);
       console.log(response)

@@ -25,7 +25,9 @@ import AppContext from '../context/AppContext';
 const { urlUtil: UrlUtil } = OHIF.utils;
 
 function StudyListRoute(props) {
+
   const { history, server, user, studyListFunctionsEnabled } = props;
+  console.log(props)
   const [t] = useTranslation('Common');
   // ~~ STATE
   const [sort, setSort] = useState({
@@ -38,6 +40,7 @@ function StudyListRoute(props) {
     PatientName: '',
     PatientID: '',
     AccessionNumber: '',
+    AccessAuth: null,
     StudyDate: '',
     modalities: '',
     StudyDescription: '',
@@ -192,6 +195,7 @@ function StudyListRoute(props) {
   }
 
   function handleFilterChange(fieldName, value) {
+    console.log(fieldName, value)
     setFilterValues(state => {
       return {
         ...state,
@@ -307,6 +311,8 @@ function updateURL(isModalOpen, appConfig, server, history) {
   }
 }
 
+
+import axios from 'axios';
 /**
  * Not ideal, but we use displaySize to determine how the filters should be used
  * to build the collection of promises we need to fetch a result set.
@@ -351,14 +357,42 @@ async function getStudyList(
     fuzzymatching: server.supportsFuzzyMatching === true,
   };
 
-  const studies = await _fetchStudies(server, mappedFilters, displaySize, {
+  let studies = await _fetchStudies(server, mappedFilters, displaySize, {
     allFields,
     patientNameOrId,
     accessionOrModalityOrDescription,
   });
 
+  // Custom check if user is authorized to access this resource
+  const accessAuthorized = async (studyInstanceUID) => {
+      if (window.config.authenticationRequired) {
+        const uri_params = {
+          baseURL: window.config.authenticationServer,
+          params: {
+            token: window.config.user.key,
+            studyID: studyInstanceUID,
+          }
+        }
+        const ax_rest = axios.create(uri_params);
+        let access = await ax_rest.get("/authOhif", {})
+              .then(
+                function(r) {
+                    return r.data;
+              });
+        return access;
+      }
+      return true;
+  }
+  let resultingArr = [];
+  for (let study of studies){
+    const result = await accessAuthorized(study.StudyInstanceUID);
+    resultingArr.push(result)
+  }
+  const resultFilterAuth = _sortAccess(studies, resultingArr, filters.AccessAuth)
+  studies = resultFilterAuth[0]
+  resultingArr = resultFilterAuth[1]
   // Only the fields we use
-  const mappedStudies = studies.map(study => {
+  const mappedStudies = studies.map( (study, index) => {
     const PatientName =
       typeof study.PatientName === 'string' ? study.PatientName : undefined;
 
@@ -376,6 +410,7 @@ async function getStudyList(
       StudyDescription: study.StudyDescription, // "BRAIN"
       // studyId: "No Study ID"
       StudyInstanceUID: study.StudyInstanceUID, // "1.3.6.1.4.1.5962.99.1.3814087073.479799962.1489872804257.3.0"
+      UserHasAccess: resultingArr[index],
       // StudyTime: "160956.0"
     };
   });
@@ -404,6 +439,31 @@ async function getStudyList(
   const result = sortedStudies.slice(0, numToTake);
 
   return result;
+}
+
+/**
+*
+* @param {object[]} studies - Array of studies to sort
+* @param {bool[]} accessedStudies - Array with booleans for access value for each study
+* @param {bool} activeFilter - if checkbox is checked
+* @returns
+*
+**/
+function _sortAccess(studies, accessedStudies, activeFilter) {
+    if (activeFilter===null || activeFilter===false) {
+      return [studies, accessedStudies];
+    }
+    else {
+      var filteredstudies = studies.filter(
+        function(study, index) {
+          return accessedStudies[index]===true;
+      })
+      var filteredaccessed = accessedStudies.filter(
+         function(access, index) {
+           return access===true;
+      })
+      return [filteredstudies, filteredaccessed];
+    }
 }
 
 /**

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { utils, log } from '@ohif/core';
+import { utils, log, DICOMWeb } from '@ohif/core';
 import cornerstoneTools from 'cornerstone-tools';
 import CornerstoneViewport from 'react-cornerstone-viewport';
 
@@ -51,7 +51,7 @@ export default async function loadFiles(
 
   const config = {
     url: window.config.servers.dicomWeb[0].qidoRoot,
-    // headers: DICOMWeb.getAuthorizationHeader(window.config.servers.dicomWeb[0]),
+    headers: DICOMWeb.getAuthorizationHeader(),
   };
   var enabledImageId = enabledElement.image.imageId;
 

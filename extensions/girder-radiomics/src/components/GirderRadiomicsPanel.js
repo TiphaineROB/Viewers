@@ -97,7 +97,7 @@ export default class GirderRadiomicsPanel extends Component {
       orthanc: 'http://localhost/proxy/dicom-web',
       login: log,
       psswd: pwd,
-      token: CookieUtils.getCookie("AUTH_SERVER_KEY"),
+      token: window.config.user.key,//CookieUtils.getCookie("AUTH_SERVER_KEY"),
     }
     if ( log === null || log === '' || pwd === null || pwd === ''){
       this.notification.show({

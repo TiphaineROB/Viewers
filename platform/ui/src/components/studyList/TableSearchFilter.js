@@ -6,6 +6,8 @@ import CustomDateRangePicker from './CustomDateRangePicker.js';
 import { Icon } from './../../elements/Icon';
 import { useTranslation } from 'react-i18next';
 
+//import './TableSearchFilter.styl';
+
 const getDateEntry = (datePicked, rangeDatePicked) => {
   return rangeDatePicked || datePicked || null;
 };
@@ -80,7 +82,6 @@ function TableSearchFilter(props) {
         const { displayText, fieldName, inputType } = field;
         const isSortField = sortFieldName === fieldName;
         const sortIcon = isSortField ? sortIconForSortField : sortIcons[0];
-
         return (
           <th key={`${fieldName}-${i}`}>
             <label
@@ -88,9 +89,10 @@ function TableSearchFilter(props) {
               onClick={() => onSort(fieldName)}
             >
               {`${displayText}`}
-              <Icon name={sortIcon} style={{ fontSize: '12px' }} />
+              <Icon name={sortIcon} style={{ fontSize: '15px' }} />
             </label>
             {inputType === 'text' && (
+
               <input
                 type="text"
                 id={`filter-${fieldName}`}
@@ -98,6 +100,26 @@ function TableSearchFilter(props) {
                 value={values[fieldName]}
                 onChange={e => onValueChange(fieldName, e.target.value)}
               />
+            )}
+            {inputType === 'bool' && (
+              <table>
+                <tbody>
+                  <tr>
+                    <td width="40%">Authorized Only<br/> &nbsp; </td>
+                    <td width="10%">
+                      <input
+                        type="checkbox"
+                        id={`filter-${fieldName}`}
+                        onChange={ e => onValueChange(fieldName, e.target.checked)}
+                      />
+                    </td>
+                    <td width="40%">
+
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
             )}
             {inputType === 'date-range' && (
               // https://github.com/airbnb/react-dates
@@ -129,12 +151,35 @@ function TableSearchFilter(props) {
     : null;
 }
 
+// <label id={`filter-${fieldName}`}>
+//   <input
+//     type="checkbox"
+//     id={`filter-${fieldName}-checkbox`}
+//     onChange={ e => onValueChange(fieldName, e.target.checked)}
+//   />
+//   <span></span>
+//   Authorized only
+// </label>
+// <table >
+//   <tbody>
+//     <tr align="center">
+//       <td width="70%" align="center">Authorized only</td>
+//       <td width="30%" align="center">
+//         <input
+//           type="checkbox"
+//           id={`filter-${fieldName}`}
+//           onChange={ e => checkUnchecked(fieldName, e)}
+//         />
+//       </td>
+//     </tr>
+//   </tbody>
+// </table>
 TableSearchFilter.propTypes = {
   meta: PropTypes.arrayOf(
     PropTypes.shape({
       displayText: PropTypes.string.isRequired,
       fieldName: PropTypes.string.isRequired,
-      inputType: PropTypes.oneOf(['text', 'date-range']).isRequired,
+      inputType: PropTypes.oneOf(['text', 'date-range', 'bool']).isRequired,
       size: PropTypes.number.isRequired,
     })
   ).isRequired,
