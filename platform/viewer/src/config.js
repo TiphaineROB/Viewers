@@ -48,7 +48,7 @@ export function setConfiguration(appConfig) {
 
       if (headers.Authorization) {
         xhr.setRequestHeader('Authorization', headers.Authorization);
-        if (window.config.serversType!="PACS"){
+        if (window.config.servers.dicomWeb[0].sourceType!="PACS"){
           xhr.setRequestHeader('ServerURL', headers.ServerURL);
           xhr.setRequestHeader('ServerToken', headers.ServerToken);
         }

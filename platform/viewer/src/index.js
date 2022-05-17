@@ -59,7 +59,7 @@ if (window) {
 const appProps = {
   config,
   defaultExtensions: [
-    OHIFGirderRadiomicsExtension,
+
     //OHIFMONAILabelExtension,
     OHIFVTKExtension,
     OHIFDicomHtmlExtension,
@@ -67,6 +67,7 @@ const appProps = {
     OHIFDicomPDFExtension,
     OHIFDicomSegmentationExtension,
     OHIFDicomRtExtension,
+    OHIFGirderRadiomicsExtension,
     //OHIFDebuggingExtension,
     //OHIFDicomTagBrowserExtension,
   ],

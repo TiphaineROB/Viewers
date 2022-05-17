@@ -1,5 +1,6 @@
 import SlabThicknessToolbarComponent from './toolbarComponents/SlabThicknessToolbarComponent';
 import VTKMPRToolbarButton from './toolbarComponents/VTKMPRToolbarButton';
+import VTKVolumeToolbarButton from './toolbarComponents/VTKVolumeToolbarButton';
 
 const TOOLBAR_BUTTON_TYPES = {
   COMMAND: 'command',
@@ -7,6 +8,42 @@ const TOOLBAR_BUTTON_TYPES = {
 };
 
 const definitions = [
+  // {
+  //   id: 'Views',
+  //   label: 'Views',
+  //   icon: 'view-multi',
+  //   context: 'ACTIVE_VIEWPORT::CORNERSTONE',
+  //   //
+  //   buttons: [
+  //     {
+  //       id: 'Axial',
+  //       label: 'Axial',
+  //       icon: 'axis-z',
+  //       //
+  //       type: TOOLBAR_BUTTON_TYPES.COMMAND,
+  //       commandName: 'axialView',
+  //       commandOptions: {},
+  //     },
+  //     {
+  //       id: 'Sagittal',
+  //       label: 'Sagittal',
+  //       icon: 'axis-x',
+  //       //
+  //       type: TOOLBAR_BUTTON_TYPES.COMMAND,
+  //       commandName: 'sagittalView',
+  //       commandOptions: {},
+  //     },
+  //     {
+  //       id: 'Coronal',
+  //       label: 'Coronal',
+  //       icon: 'axis-y',
+  //       //
+  //       type: TOOLBAR_BUTTON_TYPES.COMMAND,
+  //       commandName: 'coronalView',
+  //       commandOptions: {},
+  //     },
+  //   ],
+  // },
   {
     id: 'Crosshairs',
     label: 'Crosshairs',
@@ -135,6 +172,16 @@ const definitions = [
     CustomComponent: VTKMPRToolbarButton,
     type: TOOLBAR_BUTTON_TYPES.COMMAND,
     commandName: 'mpr2d',
+    context: 'ACTIVE_VIEWPORT::CORNERSTONE',
+  },
+  {
+    id: '3DView',
+    label: '3D View',
+    icon: 'cube-colorblue',
+    //
+    CustomComponent: VTKVolumeToolbarButton,
+    type: TOOLBAR_BUTTON_TYPES.COMMAND,
+    commandName: 'volume3d',
     context: 'ACTIVE_VIEWPORT::CORNERSTONE',
   },
 ];

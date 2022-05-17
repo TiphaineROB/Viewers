@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import '../GirderRadiomicsPanel.styl';
+import '../GirderAIModules.styl';
 import { Icon } from '@ohif/ui';
 import { CookieUtils } from '../../utils/GenericUtils';
 import { UINotificationService } from '@ohif/core';
@@ -18,10 +18,11 @@ export default class GirderOptions extends Component {
 
 
   getSettings = () => {
-    const url = CookieUtils.getCookieString(
-      'GIRDERRADIOMICS_SERVER_URL',
-      'http://' + window.location.host.split(':')[0] + ':8080/api/v1/'
-    );
+    // const url = CookieUtils.getCookieString(
+    //   'GIRDERRADIOMICS_SERVER_URL',
+    //    window.config.authenticationServer
+    // );
+    const url = window.config.authenticationServer;
     console.log(url)
     return {
       url: url,
@@ -33,7 +34,7 @@ export default class GirderOptions extends Component {
     console.log('On Connect')
     let url = evt.target.value;
     this.setState({ url: url });
-    CookieUtils.setCookie('GIRDERRADIOMICS_SERVER_URL', url);
+    // CookieUtils.setCookie('GIRDERRADIOMICS_SERVER_URL', url);
     this.connect()
   };
 
@@ -42,8 +43,8 @@ export default class GirderOptions extends Component {
   }
 
   onInfo = async () => {
-    console.log(CookieUtils.getCookie("AUTH_SERVER_KEY"))
-    var params =  {orthanc: 'http://localhost/proxy/dicom-web', token: CookieUtils.getCookie("AUTH_SERVER_KEY")}
+    // console.log(CookieUtils.getCookie("AUTH_SERVER_KEY"))
+    var params =  {orthanc: 'http://localhost/proxy/dicom-web', token: window.config.user.key, url: window.config.authenticationServer,}
     const response = await this.props.client().info(params);
     if (response.status !== 200) {
       this.notification.show({
@@ -81,7 +82,7 @@ export default class GirderOptions extends Component {
                 </td>
                 <td>&nbsp;</td>
                 <td>
-                  <button className="actionButton" onClick={this.onBlurSeverURL} title={'Connect'}>
+                  <button className="ui-btn-hover-b" onClick={this.onBlurSeverURL} title={'Connect'}>
                     Connect
                   </button>
                 </td>

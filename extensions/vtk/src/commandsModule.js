@@ -11,7 +11,9 @@ import setMPRLayout from './utils/setMPRLayout.js';
 import setViewportToVTK from './utils/setViewportToVTK.js';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants.js';
 import OHIFVTKViewport from './OHIFVTKViewport';
-
+import React from 'react';
+import ReactDOM from 'react-dom'
+import VTKViewport3DRender from './VTKViewport3DRender'
 const { BlendMode } = Constants;
 
 const commandsModule = ({ commandsManager, servicesManager }) => {
@@ -147,9 +149,7 @@ const commandsModule = ({ commandsManager, servicesManager }) => {
     },
     coronal: async ({ viewports }) => {
       const api = await _getActiveViewportVTKApi(viewports);
-
       apis[viewports.activeViewportIndex] = api;
-
       _setView(api, [0, 1, 0], [0, 0, 1]);
     },
     requestNewSegmentation: async ({ viewports }) => {
@@ -386,6 +386,7 @@ const commandsModule = ({ commandsManager, servicesManager }) => {
       });
     },
     mpr2d: async ({ viewports }) => {
+      console.log("mpr2d command")
       // TODO push a lot of this backdoor logic lower down to the library level.
       const displaySet =
         viewports.viewportSpecificData[viewports.activeViewportIndex];
@@ -487,6 +488,43 @@ const commandsModule = ({ commandsManager, servicesManager }) => {
         }
       }
     },
+    volume3d: async ({ viewports }) => {
+      // TODO: adapt github.com/OHIF/Viewers/issues/2394
+      console.log("Volume3d command")
+      console.log(viewports)
+      const displaySet =
+       viewports.viewportSpecificData[viewports.activeViewportIndex];
+      const viewportProps = [
+       {
+         orientation: {
+           sliceNormal: [0, 0, 1],
+           viewUp: [0, -1, 0],
+         },
+        },
+      ];
+
+      try {
+         await setMPRLayout(displaySet, viewportProps, 1, 1);
+      } catch (error) {
+       throw new Error(error);
+      }
+
+      const activeView = Array.from(
+       document.getElementsByClassName('vtk-viewport-handler')
+      );
+      console.log(activeView)
+      activeView[0].innerHTML = '';
+      ReactDOM.render(
+        <VTKViewport3DRender
+          url={window.config.servers.dicomWeb[0].wadoRoot}
+          studyInstanceUID={viewports.viewportSpecificData[0].StudyInstanceUID}
+          seriesInstanceUID={viewports.viewportSpecificData[0].SeriesInstanceUID}
+        />,
+        activeView[0]
+      );
+      // Render3D.botones(false);
+
+    },
   };
 
   window.vtkActions = actions;
@@ -582,10 +620,34 @@ const commandsModule = ({ commandsManager, servicesManager }) => {
       options: {},
       context: 'VIEWER',
     },
+    volume3d: {
+      commandFn: actions.volume3d,
+      storeContexts: ['viewports'],
+      options: {},
+      context: 'VIEWER',
+    },
     getVtkApiForViewportIndex: {
       commandFn: actions.getVtkApis,
       context: 'VIEWER',
     },
+    // axialView: {
+    //   commandFn: actions.axial,
+    //   storeContexts: ['viewports'],
+    //   options: {},
+    //   context: 'VIEWER',
+    // },
+    // coronalView: {
+    //   commandFn: actions.coronal,
+    //   storeContexts: ['viewports'],
+    //   options: {},
+    //   context: 'VIEWER',
+    // },
+    // sagittalView: {
+    //   commandFn: actions.sagittal,
+    //   storeContexts: ['viewports'],
+    //   options: {},
+    //   context: 'VIEWER',
+    // },
   };
 
   return {

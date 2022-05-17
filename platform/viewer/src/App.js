@@ -7,6 +7,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { hot } from 'react-hot-loader/root';
 
 import OHIFCornerstoneExtension from '@ohif/extension-cornerstone';
+import OHIFAuthenticationForm from '@ohif/extension-authentication-form'
 
 import {
   SnackbarProvider,
@@ -59,10 +60,13 @@ import UserManagerContext from './context/UserManagerContext';
 import { AppProvider, useAppContext, CONTEXTS } from './context/AppContext';
 
 /** ~~~~~~~~~~~~~ Application Setup */
+
 const commandsManagerConfig = {
   getAppState: () => store.getState(),
   getActiveContexts: () => getActiveContexts(store.getState()),
 };
+
+
 
 /** Managers */
 const commandsManager = new CommandsManager(commandsManagerConfig);
@@ -73,7 +77,6 @@ let extensionManager;
 
 // TODO[react] Use a provider when the whole tree is React
 window.store = store;
-
 window.ohif = window.ohif || {};
 window.ohif.app = {
   commandsManager,
@@ -110,10 +113,13 @@ class App extends Component {
   _appConfig;
   _userManager;
 
+
+
   constructor(props) {
     super(props);
 
     const { config, defaultExtensions } = props;
+
 
     const appDefaultConfig = {
       showStudyList: true,
@@ -135,9 +141,12 @@ class App extends Component {
       oidc,
     } = this._appConfig;
 
+
+    console.log(" App servers :: ", servers)
     setConfiguration(this._appConfig);
 
     this.initUserManager(oidc);
+
     _initServices([
       UINotificationService,
       UIModalService,
@@ -158,6 +167,9 @@ class App extends Component {
     _initHotkeys(appConfigHotkeys);
     _initServers(servers);
     initWebWorkers();
+  }
+  submit = () => {
+    console.log("Test")
   }
 
   render() {
@@ -187,9 +199,11 @@ class App extends Component {
                                 modal={OHIFModal}
                                 service={UIModalService}
                               >
-                                <OHIFStandaloneViewer
-                                  userManager={this._userManager}
-                                />
+
+                                    <OHIFStandaloneViewer
+                                    userManager={this._userManager}
+                                  />
+
                               </ModalProvider>
                             </DialogProvider>
                           </SnackbarProvider>
@@ -219,6 +233,7 @@ class App extends Component {
                           modal={OHIFModal}
                           service={UIModalService}
                         >
+
                           <OHIFStandaloneViewer />
                         </ModalProvider>
                       </DialogProvider>
@@ -345,7 +360,7 @@ function _makeAbsoluteIfNecessary(url, base_url) {
   if (base_url[base_url.length - 1] === '/') {
     base_url = base_url.slice(0, base_url.length - 1);
   }
-
+  console.log(base_url, url)
   return base_url + url;
 }
 

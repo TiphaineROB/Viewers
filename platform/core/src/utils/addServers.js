@@ -5,6 +5,7 @@ const addServers = (servers, store) => {
   }
 
   Object.keys(servers).forEach(serverType => {
+    console.log(serverType)
     const endpoints = servers[serverType];
     endpoints.forEach(endpoint => {
       const server = Object.assign({}, endpoint);
@@ -14,8 +15,10 @@ const addServers = (servers, store) => {
         type: 'ADD_SERVER',
         server,
       });
+
     });
   });
+
 };
 
 export default addServers;

@@ -52,10 +52,10 @@ export async function sendToServer(dicomDict) {
   //   duration: 2000,
   // });
 
-  var FileSaver = require('file-saver');
-  let filename = `test-toserver.dcm`
-  var blob = new Blob([part10Buffer], { type: 'text/plain;charset=utf-8' });
-  FileSaver.saveAs(blob, filename);
+  // var FileSaver = require('file-saver');
+  // let filename = `test-toserver.dcm`
+  // var blob = new Blob([part10Buffer], { type: 'text/plain;charset=utf-8' });
+  // FileSaver.saveAs(blob, filename);
 }
 
 /**
@@ -174,6 +174,7 @@ export function createSegDisplaySet(dataset, dicomBuffer) {
     dataset,
   };
 
+  console.log("SegDisplaySet", segDisplaySet)
   segDisplaySet.getSourceDisplaySet = function(studies, activateLabelMap = true, onDisplaySetLoadFailureHandler) {
     return getSourceDisplaySet(studies, segDisplaySet, activateLabelMap, onDisplaySetLoadFailureHandler);
   };

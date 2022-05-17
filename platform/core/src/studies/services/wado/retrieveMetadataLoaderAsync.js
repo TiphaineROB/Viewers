@@ -63,7 +63,6 @@ function makeSeriesAsyncLoader(
       // Added to get complete instances metadata -- especially 0008115 field
       let instances = [];
       for (const sopInstance of sopInstances) {
-
         const sopInstanceUID = sopInstance['00080018'].Value;
         const sopInstanceModality = sopInstance['00080060'].Value;
         if (sopInstanceModality[0] === 'SEG') {
@@ -73,6 +72,7 @@ function makeSeriesAsyncLoader(
             sopInstanceUID: sopInstanceUID,
           })
           instances = instances.concat(instance);
+          console.log('instance to check ! ', instance)
           if (instance[0].hasOwnProperty('00081115')){
             sopInstance['00081115']= instance[0]['00081115'];
           }

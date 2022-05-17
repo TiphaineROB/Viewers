@@ -40,6 +40,8 @@ import {
 import './SegmentationPanel.css';
 //import '../../../../girder-radiomics/src/components/GirderRadiomicsPanel.styl';
 import SegmentationSettings from '../SegmentationSettings/SegmentationSettings';
+import AutoSegmentation from '../AutoSegmentation/AutoSegmentation';
+
 
 const { studyMetadataManager, xhrRetryRequestHook} = utils;
 const { MetadataProvider } = classes;
@@ -78,6 +80,7 @@ const SegmentationPanel = ({
   const isVTK = () => activeContexts.includes(contexts.VTK);
   const isCornerstone = () => activeContexts.includes(contexts.CORNERSTONE);
 
+
   /*
    * TODO: wrap get/set interactions with the cornerstoneTools
    * store with context to make these kind of things less blurry.
@@ -103,11 +106,10 @@ const SegmentationPanel = ({
     isDisabled: true,
   });
 
-
   // temporary uploaded segments that should be load as well
   let labelMapListTmp = [];
 
-  const getActiveViewport = () => viewports[activeIndex];
+  let getActiveViewport = () => viewports[activeIndex];
 
   const getFirstImageId = () => {
     const { StudyInstanceUID, displaySetInstanceUID } = getActiveViewport();
@@ -609,7 +611,11 @@ const SegmentationPanel = ({
 
   const getBrushStackState = () => {
     const module = cornerstoneTools.getModule('segmentation');
+    console.log(module)
     const firstImageId = getFirstImageId();
+
+
+
     const brushStackState = module.state.series[firstImageId];
     return brushStackState;
   };
@@ -679,7 +685,7 @@ const SegmentationPanel = ({
   // Added functions
   const notification = UINotificationService.create({});
 
-  const callbackSegmentations = async (dcm, save=true) => {
+  const callbackSegmentations = async (dcm, save=true, viewport=undefined) => {
     const dcmjs = require("dcmjs");
     const buffer = Buffer.from(dcm.write());
     var blob = new Blob([buffer], { type: 'text/plain;charset=utf-8' });
@@ -701,6 +707,9 @@ const SegmentationPanel = ({
 
       const stackToolState = cornerstoneTools.getToolState(element, "stack");
       const imageIds = stackToolState.data[0].imageIds;
+
+
+      console.log("Segmentation panel", imageIds)
 
       let imagePromises = [];
       for (let i = 0; i < imageIds.length; i++) {
@@ -725,7 +734,11 @@ const SegmentationPanel = ({
 
       const segDisplaySet = createSegDisplaySet(dataset, buffer.buffer);
 
-      const activeViewport = getActiveViewport();
+      const activeViewport = typeof viewport != "undefined" ? viewport : getActiveViewport();
+      if (activeViewport != getActiveViewport()){
+        getActiveViewport = () => activeViewport;
+      }
+
       await segDisplaySet.load(activeViewport, studies);
       const {
         labelmapBufferArray,
@@ -769,6 +782,15 @@ const SegmentationPanel = ({
       var count = studies[0].derivedDisplaySets.length;
       studies[0].derivedDisplaySets.push(segDisplaySet)
       studies[0].displaySets.push(segDisplaySet)
+
+
+      console.log(activeViewport, viewports[activeIndex])
+      console.log(studies)
+      console.log(segDisplaySet)
+
+      console.log("before setActiveLabelMap")
+
+
       const results = await setActiveLabelmap(
         activeViewport,
         studies,
@@ -777,6 +799,8 @@ const SegmentationPanel = ({
         onDisplaySetLoadFailure
       );
       setActiveSegment(1)
+
+      console.log("After setActiveLabelMap")
 
       const t1 = performance.now();
       console.log(`Decode SEG and load to cornerstone: ${t1-t0}`)
@@ -843,7 +867,7 @@ const SegmentationPanel = ({
             // Needs to use another methods than the dicomWeb
             console.log("TODO remove previous ?")
           }
-          callbackSegmentations(newDicomDict);
+          callbackSegmentations(newDicomDict, true, getActiveViewport());
       }
       try {
         const instance = await dicomWeb.retrieveInstance(options)
@@ -936,12 +960,16 @@ const SegmentationPanel = ({
       var dcmfiles = []
       for (let i = 0; i < files.length; i++) {
         let file = files[i];
-        await loadFiles(file, getCurrentDisplaySet(), callbackSegmentations)
+        await loadFiles(file, getActiveViewport(), getCurrentDisplaySet(), callbackSegmentations)
       }
     }
   };
 
   const inputRef = useRef(null);
+
+  console.log("Segmentation panel viewports: ", viewports)
+  // const autoSegmentationComponent = AutoSegmentation(activeIndex, viewports, getCurrentDisplaySet(), callbackSegmentations)
+  // console.log(autoSegmentationComponent)
 
   if (state.showSettings) {
     return (
@@ -991,56 +1019,60 @@ const SegmentationPanel = ({
           />
         </div>
 
-        <p style={{ fontSize: 'smaller' }}>
-          Add or load new segments.
-        </p>
-        <table width="100%">
-          <tbody>
-            <tr>
-              <td>
-                  <button onClick={createSegment} className="ui-btn-hover-b" title='Add Segment'>
-                    &nbsp;
-                    <Icon name="plus" width="12px" height="12px" margins="10px"/>
-                    &nbsp; New &nbsp;
-                  </button>
-                  &nbsp;
-                  <button onClick={loadSegmentations} className="ui-btn-hover-b" title='Load segments'>
-                    &nbsp;&nbsp;
-                    <Icon name="rotate" width="12px" height="12px" margins="10px"/>
-                    &nbsp; Start Loading Segments &nbsp;
-                  </button>
-                  <input
-                    id="files"
-                    width="20%"
-                    className="ui-btn-hover-c"
-                    type="file"
-                    ref={inputRef }
-                    multiple
-                    size="1"
-                  />
-
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p style={{ fontSize: 'smaller' }}>
-          Synchronize server and download locally segments.
-        </p>
-        <button onClick={uploadSegmentations} className="ui-btn-hover-b" title='Save Changes on server'>
-          &nbsp;
-          <Icon name="save" width="12px" height="12px"/>
-          &nbsp;&nbsp;&nbsp;&nbsp; Save changes on server &nbsp;&nbsp;
-        </button>
-
-
-        <button onClick={downloadSegment} className="ui-btn-hover-a" title='Download Segment'>
-          &nbsp;
-          <Icon name="angle-double-down" width="12px" height="12px" />
-          &nbsp; Download segment locally &nbsp;
-        </button>
-
         <br style={{ margin: '3px' }} />
+
+        <div className="SegmentsSection">
+          <div className="header">
+            <div>
+              Add or load new segments.
+            </div>
+          </div>
+            <br style={{ margin: '3px' }} />
+            <table width="100%">
+              <tbody>
+                  <tr>
+                    <td>
+                        <button onClick={createSegment} className="ui-btn-hover-b" title='Add Segment'>
+                          &nbsp;
+                          <Icon name="plus" width="12px" height="12px" margins="10px"/>
+                          &nbsp; New &nbsp;
+                        </button>
+                        &nbsp;
+                        <button onClick={loadSegmentations} className="ui-btn-hover-b" title='Load segments'>
+                          &nbsp;&nbsp;
+                          <Icon name="rotate" width="12px" height="12px" margins="10px"/>
+                          &nbsp; Start Loading Segments &nbsp;
+                        </button>
+                        <input
+                          id="files"
+                          width="20%"
+                          className="ui-btn-hover-c"
+                          type="file"
+                          ref={inputRef }
+                          multiple
+                          size="1"
+                        />
+
+                    </td>
+                  </tr>
+              </tbody>
+            </table>
+
+            <p style={{ fontSize: 'smaller' }}>
+                Synchronize server and download locally segments.
+            </p>
+            <button onClick={uploadSegmentations} className="ui-btn-hover-b" title='Save Changes on server'>
+                &nbsp;
+                <Icon name="save" width="12px" height="12px"/>
+                &nbsp;&nbsp;&nbsp;&nbsp; Save changes on server &nbsp;&nbsp;
+            </button>
+
+            <button onClick={downloadSegment} className="ui-btn-hover-a" title='Download Segment'>
+                &nbsp;
+                <Icon name="angle-double-down" width="12px" height="12px" />
+                &nbsp; Download segment locally &nbsp;
+            </button>
+        </div>
 
         <SegmentsSection
           count={state.segmentList.length}
@@ -1054,11 +1086,26 @@ const SegmentationPanel = ({
             <TableList headless>{state.segmentList}</TableList>
           </ScrollableArea>
         </SegmentsSection>
-
+        <br style={{ margin: '3px' }} />
+        <div className="SegmentsSection">
+          <div className="header">
+            <div>
+              Use semi-automatic segmentation. WIP
+            </div>
+          </div>
+          <br style={{ margin: '3px' }} />
+          <AutoSegmentation
+            viewports={viewports}
+            activeIndex={activeIndex}
+            currentDisplaySet={getCurrentDisplaySet()}
+            callback={callbackSegmentations}
+          />
+        </div>
       </div>
     );
   }
 };
+
 
 SegmentationPanel.propTypes = {
   /*

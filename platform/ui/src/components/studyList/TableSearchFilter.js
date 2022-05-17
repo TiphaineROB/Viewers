@@ -105,17 +105,37 @@ function TableSearchFilter(props) {
               <table>
                 <tbody>
                   <tr>
-                    <td width="40%">Authorized Only<br/> &nbsp; </td>
-                    <td width="10%">
+                    <td width="55%">Authorized Only<br/> &nbsp; </td>
+                    <td width="18%">
                       <input
                         type="checkbox"
                         id={`filter-${fieldName}`}
                         onChange={ e => onValueChange(fieldName, e.target.checked)}
                       />
                     </td>
-                    <td width="40%">
+                    <td width="20%">
 
                     </td>
+                  </tr>
+                </tbody>
+              </table>
+
+            )}
+            {inputType === 'logo' && (
+              <table>
+                <tbody>
+                  <tr>
+                  <td width="55%">Uncomplete Analysis<br/> &nbsp; </td>
+                  <td width="18%">
+                    <input
+                      type="checkbox"
+                      id={`filter-${fieldName}`}
+                      onChange={ e => onValueChange(fieldName, e.target.checked)}
+                    />
+                  </td>
+                  <td width="20%">
+
+                  </td>
                   </tr>
                 </tbody>
               </table>
@@ -179,7 +199,7 @@ TableSearchFilter.propTypes = {
     PropTypes.shape({
       displayText: PropTypes.string.isRequired,
       fieldName: PropTypes.string.isRequired,
-      inputType: PropTypes.oneOf(['text', 'date-range', 'bool']).isRequired,
+      inputType: PropTypes.oneOf(['text', 'date-range', 'bool', 'logo']).isRequired,
       size: PropTypes.number.isRequired,
     })
   ).isRequired,

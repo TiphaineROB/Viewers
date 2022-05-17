@@ -16,6 +16,7 @@ import { loadUser, createUserManager } from 'redux-oidc';
  * @param {string} oidcSettings.extraQueryParams,
  */
 export default function(store, oidcSettings) {
+  //console.log("getUserManager", store, oidcSettings)
   if (!store || !oidcSettings) {
     return;
   }

@@ -20,9 +20,9 @@ window.config = {
       {
 
         name: 'DCM4CHEE',
-        wadoUriRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/wado',
-        qidoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
-        wadoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
+        wadoUriRoot: 'https://covid.creatis.insa-lyon.fr/dcm4chee-arc/aets/DCM4CHEE/wado',
+        qidoRoot: 'https://covid.creatis.insa-lyon.fr/dcm4chee-arc/aets/DCM4CHEE/rs',
+        wadoRoot: 'https://covid.creatis.insa-lyon.fr/dcm4chee-arc/aets/DCM4CHEE/rs',
         qidoSupportsIncludeField: true,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
@@ -150,6 +150,8 @@ window.config = {
     },
   ],
   cornerstoneExtensionConfig: {},
+  authenticationRequired: true,
+  authenticationServer: 'http://localhost:8080/api/v1/',
   // Following property limits number of simultaneous series metadata requests.
   // For http/1.x-only servers, set this to 5 or less to improve
   //  on first meaningful display in viewer

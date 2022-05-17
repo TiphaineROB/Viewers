@@ -9,9 +9,15 @@ export default class ModelSelector extends Component {
     title: PropTypes.string,
     models: PropTypes.array,
     currentModel: PropTypes.string,
+    segs: PropTypes.array,
+    currentSeg: PropTypes.string,
+    radiomics: PropTypes.array,
+    currentRad: PropTypes.string,
     usage: PropTypes.any,
     onClick: PropTypes.func,
     onSelectModel: PropTypes.func,
+    onSelectSeg: PropTypes.func,
+    onSelectRad: PropTypes.func,
   };
 
   constructor(props) {
@@ -22,9 +28,26 @@ export default class ModelSelector extends Component {
       : props.models.length > 0
       ? props.models[0]
       : '';
+
+    const currentSeg = props.currentSeg
+      ? props.currentSeg
+      : props.segs.length > 0
+      ? props.segs[0]
+      : '';
+
+    const currentRad = props.currentRad
+        ? props.currentRad
+        : props.radiomics.length > 0
+        ? props.radiomics[0]
+        : '';
+
     this.state = {
       models: props.models,
+      segs: props.segs,
+      radiomics: props.radiomics,
       currentModel: currentModel,
+      currentSeg: currentSeg,
+      currentRad: currentRad,
       buttonDisabled: false,
     };
   }
@@ -44,11 +67,34 @@ export default class ModelSelector extends Component {
     if (this.props.onSelectModel) this.props.onSelectModel(evt.target.value);
   };
 
+  onChangeSeg = evt => {
+    this.setState({ currentSeg: evt.target.value });
+    if (this.props.onSelectSeg) this.props.onSelectSeg(evt.target.value);
+  };
+
+  onChangeRad = evt => {
+    this.setState({ currentRad: evt.target.value });
+    if (this.props.onSelectRad) this.props.onSelectRad(evt.target.value);
+  };
+
   currentModel = () => {
     return this.props.currentModel
       ? this.props.currentModel
       : this.state.currentModel;
   };
+
+  currentSeg = () => {
+    return this.props.currentSeg
+    ? this.props.currentSeg
+    : this.state.currentSeg;
+  }
+
+
+  currentRad = () => {
+    return this.props.currentRad
+    ? this.props.currentRad
+    : this.state.currentRad;
+  }
 
   onClickBtn = async () => {
     if (this.state.buttonDisabled) {
@@ -62,12 +108,21 @@ export default class ModelSelector extends Component {
     }
 
     this.setState({ buttonDisabled: true });
-    await this.props.onClick(model);
+
+    // console.log("On click Model", model)
+    // console.log("On click Seg", this.state.currentSeg, "this.current()", this.currentSeg())
+    // console.log("On click Rad", this.state.currentRad, "this.current()", this.currentRad())
+    await this.props.onClick(model, this.currentSeg(), this.currentRad());
     this.setState({ buttonDisabled: false });
   };
 
   render() {
     const currentModel = this.currentModel();
+    const currentSeg = this.currentSeg();
+    const currentRad = this.currentRad();
+
+    console.log("Current render ! ", currentModel, currentSeg, currentRad)
+
     return (
       <div className="modelSelector">
         <table>
@@ -107,6 +162,48 @@ export default class ModelSelector extends Component {
           </tbody>
         </table>
         {this.props.usage}
+        <table style={{ fontSize: 'smaller' }}>
+           <tbody>
+             <tr>
+              <td colSpan="3"> Options: </td>
+             </tr>
+             <tr>
+               <td width="40%"> Segmentation file :</td>
+               <td width="2%">&nbsp;</td>
+               <td width="58%">
+                 <select
+                   className="selectBox"
+                   onChange={this.onChangeSeg}
+                   value={currentSeg}
+                 >
+                   {this.props.segs.map(seg => (
+                     <option key={seg} name={seg} value={seg}>
+                       {`${seg} `}
+                     </option>
+                   ))}
+                 </select>
+               </td>
+             </tr>
+             <tr>
+               <td width="40%"> Radiomics file : </td>
+               <td width="2%">&nbsp;</td>
+               <td width="58%">
+                 <select
+                   className="selectBox"
+                   onChange={this.onChangeRad}
+                   value={currentRad}
+                 >
+                   {this.props.radiomics.map(rad => (
+                     <option key={rad} name={rad} value={rad}>
+                       {`${rad.date} `}
+                     </option>
+                   ))}
+                 </select>
+               </td>
+
+             </tr>
+           </tbody>
+        </table>
       </div>
     );
   }

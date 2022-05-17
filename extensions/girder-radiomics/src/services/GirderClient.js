@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export default class GirderRadiomicsClient {
+export default class GirderClient {
   constructor(server_url) {
     this.server_url = new URL(server_url);
   }
@@ -8,15 +8,35 @@ export default class GirderRadiomicsClient {
   async info(params) {
 
     let url = new URL('radiomicsOHIF', this.server_url);
-    return await GirderRadiomicsClient.api_get(url.toString(), params);
+    return await GirderClient.api_get(url.toString(), params);
+  }
+
+  async infoDiagnosisPanel(params) {
+
+    let url = new URL('aimodulesOHIF', this.server_url);
+    return await GirderClient.api_get(url.toString(), params);
   }
 
   async get_radiomics(params){
     let url = new URL('radiomicsOHIF', this.server_url);
-    return await GirderRadiomicsClient.api_post(
+    return await GirderClient.api_post(
       url.toString(),
       params,
     );
+  }
+
+  async diagnosis(params) {
+    let url = new URL('aimodulesOHIF/diagnosis', this.server_url);
+    return await GirderClient.api_post(url.toString(), params);
+  }
+
+  // async downloadItem(params, idItem) {
+  //   let url = new URL('item/'+idItem+'/download', this.server_url);
+  //   return await GirderClient.api_get(url.toString());
+  // }
+  async downloadItem(params) {
+    let url = new URL('radiomicsOHIF/download', this.server_url);
+    return await GirderClient.api_get(url.toString(params));
   }
 
   static api_get(url, params) {

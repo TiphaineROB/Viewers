@@ -19,6 +19,7 @@ const publicAPI = {
   name,
   hide: _hide,
   show: _show,
+  //showAsync: _showAsync,
   setServiceImplementation,
 };
 
@@ -86,6 +87,7 @@ function setServiceImplementation({
   }
   if (showImplementation) {
     serviceImplementation._show = showImplementation;
+    // console.log(serviceImplementation)
   }
 }
 

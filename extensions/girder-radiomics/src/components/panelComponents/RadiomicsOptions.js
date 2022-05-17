@@ -2,6 +2,11 @@ import React from 'react';
 import { CookieUtils } from '../../utils/GenericUtils';
 import './RadiomicsOptions.styl';
 import BaseTab from './BaseTab';
+import moment from 'moment';
+import { utils, classes, UINotificationService } from '@ohif/core';
+const { studyMetadataManager, xhrRetryRequestHook} = utils;
+const { MetadataProvider } = classes;
+
 
 export default class RadiomicsOptions extends BaseTab {
   constructor(props) {
@@ -16,6 +21,8 @@ export default class RadiomicsOptions extends BaseTab {
       viewSegments: props.viewSegments,
     };
     this.props = props;
+    console.log(this.state.viewSegments)
+
   }
   async componentDidMount() {
     console.log("RadiomicsOptions did mount correctly!")
@@ -49,8 +56,8 @@ export default class RadiomicsOptions extends BaseTab {
   // };
 
   onClickAction = async evt => {
-    console.log(this.currentSeg())
-    if (this.currentSeg() == null ){
+    console.log(this.current)
+    if (this.current == null ){
       this.notification.show({
         title: 'Girder Radiomics',
         message: 'No Segments available',
@@ -73,15 +80,19 @@ export default class RadiomicsOptions extends BaseTab {
         type: 'warning',
         duration: 5000,
       });
+
+      const MaskID = this.getMaskID(this.current)
+
+      console.log(MaskID)
       var params =  {
         orthanc: 'http://localhost/proxy/dicom-web', // qu'il faut récupérer de la config ?
-        studyID: this.state.viewConstants.StudyInstanceUID,  // a récupéré des composants
-        serieImgID: this.state.viewConstants.SeriesInstanceUID,
-        serieMaskID: this.currentSeg(),
-        collection: '61f7b3ade525b9309f549de2',
-        login: this.props.login.value,
-        psswd: this.props.password.value,
+        patientID: this.props.viewConstants.PatientID,
+        studyID: this.props.viewConstants.StudyInstanceUID,  // a récupéré des composants
+        serieImgID: this.props.viewConstants.SeriesInstanceUID,
+        serieMaskID: MaskID,
+        //collection: '61f7b3ade525b9309f549de2',
         token: window.config.user.key,//CookieUtils.getCookie("AUTH_SERVER_KEY"),
+        url: window.config.authenticationServer,
       }
       const response = await this.props.client().get_radiomics(params);
       console.log(response)
@@ -99,12 +110,33 @@ export default class RadiomicsOptions extends BaseTab {
           type: 'success',
           duration: 2000,
         });
+        this.props.callback()
       }
 
     }
 
   };
 
+  getMaskID = (segname) => {
+    const description = segname.split(' -- ')[0]
+    const date = segname.split(' -- ')[1]
+    for ( var index in this.props.viewSegments) {
+      const {
+        SeriesDate,
+        SeriesTime,
+        SeriesDescription,
+      } = this.props.viewSegments[index]
+
+      const dateStr = `${SeriesDate}:${SeriesTime}`.split('.')[0];
+      const dateMoment = moment(dateStr, 'YYYYMMDD:HHmmss');
+      const displayDate = dateMoment.format('ddd, MMM Do YYYY, h:mm:ss a');
+      // console.log(displayDate, date, description, SeriesDescription)
+      if (displayDate===date && description===SeriesDescription)
+      {
+          return this.props.viewSegments[index].SeriesInstanceUID;
+      }
+    }
+  }
   // onClickSegments = async evt => {
   //   console.log('WIP');
   //   var params =  { orthanc: 'http://localhost/proxy/dicom-web' }
@@ -133,6 +165,7 @@ export default class RadiomicsOptions extends BaseTab {
   // }
 
   onChangeSeg = evt => {
+    console.log(evt)
     this.setState({ currentSeg: evt.target.value });
   };
 
@@ -141,20 +174,31 @@ export default class RadiomicsOptions extends BaseTab {
       ? this.state.currentSeg
       : null;
   };
-  // <td width="75%">
-  //   <button
-  //     className="optionsButton"
-  //     onClick={this.onClickSegments}
-  //     title={'Get segments'}
-  //     style={{ display: this.onClickSegments? 'block' : 'none' }}
-  //   >
-  //     Get Correlated SEG
-  //   </button>
-  // </td>
 
   render() {
+
+    console.log(this.state)
+    console.log(this.props)
+
     let config = this.state.config ? this.state.config : {};
-    let currentSeg = this.currentSeg()
+
+    // Get segments
+    let segments = [];
+    for (var index in this.props.viewSegments) {
+      const {
+        SeriesDate,
+        SeriesTime,
+        SeriesDescription,
+      } = this.props.viewSegments[index]
+
+      const dateStr = `${SeriesDate}:${SeriesTime}`.split('.')[0];
+      const date = moment(dateStr, 'YYYYMMDD:HHmmss');
+      const displayDate = date.format('ddd, MMM Do YYYY, h:mm:ss a');
+      segments.push(SeriesDescription + ' -- ' + displayDate)
+    }
+
+    this.current = this.currentSeg()!=null ?  this.currentSeg() : segments.length > 0 ? segments[0] : null;
+
     //window.location.reload(false);
     return (
       <div className="tab">
@@ -177,7 +221,7 @@ export default class RadiomicsOptions extends BaseTab {
                 <td width="50%"> &nbsp;</td>
                 <td width="50%">
                   <button
-                    className="actionButton"
+                    className="ui-btn-hover-b"
                     onClick={this.onClickAction}
                     title={'Run Extraction Radiomics'}
                     style={{ display: this.onClickAction? 'block' : 'none' }}
@@ -190,20 +234,10 @@ export default class RadiomicsOptions extends BaseTab {
           </table>
           <table>
             <tbody>
+
               <tr>
                 <td>
-                  <p></p>
-                  <b>StudyUID:</b>
-                  <p style={{ fontSize: 'smaller' }}>
-                    {this.state.viewConstants.StudyInstanceUID}
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td> <b>SerieUID:</b>
-                  <p style={{ fontSize: 'smaller' }}>
-                    {this.state.viewConstants.SeriesInstanceUID}
-                  </p>
+                  <b>Series Number:</b> {this.props.viewConstants.SeriesNumber}
                 </td>
               </tr>
               <tr>
@@ -212,10 +246,10 @@ export default class RadiomicsOptions extends BaseTab {
                     <select
                       className="selectBox"
                       onChange={this.onChangeSeg}
-                      value={currentSeg}
+                      value={this.current}
                     >
                       {
-                        this.props.viewSegments && this.props.viewSegments.map(model => (
+                        segments && segments.map(model => (
                         <option key={model} name={model} value={model}>
                           {`${model} `}
                         </option>
@@ -232,3 +266,12 @@ export default class RadiomicsOptions extends BaseTab {
     );
   }
 }
+// <tr>
+//   <td>
+//     <p></p>
+//     <b>StudyUID:</b>
+//     <p style={{ fontSize: 'smaller' }}>
+//       {this.props.viewConstants.StudyInstanceUID}
+//     </p>
+//   </td>
+// </tr>

@@ -7,6 +7,7 @@ import { Dropdown, AboutContent, withModal } from '@ohif/ui';
 //
 import { UserPreferences } from './../UserPreferences';
 import OHIFLogo from '../OHIFLogo/OHIFLogo.js';
+import CREATISLogo from '../CREATISLogo/CREATISLogo.js';
 import './Header.css';
 
 function Header(props) {
@@ -116,7 +117,7 @@ Header.propTypes = {
 
 Header.defaultProps = {
   useLargeLogo: false,
-  children: OHIFLogo(),
+  children: CREATISLogo(),
 };
 
 export default withTranslation(['Header', 'AboutModal'])(

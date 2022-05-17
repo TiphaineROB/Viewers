@@ -7,6 +7,8 @@ import PropTypes from 'prop-types';
 import { StudyListLoadingText } from './StudyListLoadingText.js';
 import { useTranslation } from 'react-i18next';
 
+import { Icon } from '@ohif/ui';
+
 const getContentFromUseMediaValue = (
   displaySize,
   contentArrayMap,
@@ -21,7 +23,8 @@ const getContentFromUseMediaValue = (
 };
 
 import axios from 'axios';
-const TEST = [true, false, true, true];
+
+
 
 /**
  *
@@ -50,7 +53,13 @@ function StudyList(props) {
       displayText: t('Access'),
       fieldName: 'AccessAuth',
       inputType: 'bool',
-      size: 100,
+      size: 200,
+    },
+    {
+      displayText: t('StateAnalysis'),
+      fieldName: 'StateAnalysis',
+      inputType: 'logo',
+      size: 200,
     },
     {
       displayText: t('PatientName'),
@@ -88,6 +97,7 @@ function StudyList(props) {
       inputType: 'text',
       size: 335,
     },
+
   ];
 
   const mediumTableMeta = [
@@ -95,7 +105,13 @@ function StudyList(props) {
       displayText: t('Access'),
       fieldName: 'AccessAuth',
       inputType: 'bool',
-      size: 50,
+      size: 200,
+    },
+    {
+      displayText: t('StateAnalysis'),
+      fieldName: 'StateAnalysis',
+      inputType: 'logo',
+      size: 200,
     },
     {
       displayText: `${t('PatientName')} / ${t('MRN')}`,
@@ -115,6 +131,7 @@ function StudyList(props) {
       inputType: 'date-range',
       size: 300,
     },
+
   ];
 
   const smallTableMeta = [
@@ -122,7 +139,13 @@ function StudyList(props) {
       displayText: t('Access'),
       fieldName: 'AccessAuth',
       inputType: 'bool',
-      size: 20,
+      size: 100,
+    },
+    {
+      displayText: t('StateAnalysis'),
+      fieldName: 'StateAnalysis',
+      inputType: 'logo',
+      size: 100,
     },
     {
       displayText: t('Search'),
@@ -130,6 +153,7 @@ function StudyList(props) {
       inputType: 'text',
       size: 100,
     },
+
   ];
 
   const tableMeta = getContentFromUseMediaValue(
@@ -143,7 +167,6 @@ function StudyList(props) {
     .reduce((prev, next) => prev + next);
 
  // TODO Filter the studies regarding the accessAuthorized function
-
   return translationsAreReady ? (
     <table className="table table--striped table--hoverable">
       <colgroup>
@@ -201,12 +224,14 @@ function StudyList(props) {
           </tr>
         )}
         {!isLoading &&
+
           studies.map((study, index) => (
             <TableRow
               key={`${study.StudyInstanceUID}-${index}`}
               onClick={StudyInstanceUID => handleSelectItem(StudyInstanceUID)}
               AccessionNumber={study.AccessionNumber || ''}
               AccessAuth={study.UserHasAccess}
+              StateAnalysis={study.StepsAnalysis}
               modalities={study.modalities}
               PatientID={study.PatientID || ''}
               PatientName={study.PatientName || ''}
@@ -257,17 +282,21 @@ StudyList.defaultProps = {};
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
 import { faLockOpen } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { library } from "@fortawesome/fontawesome-svg-core";
 
 library.add(faLock)
 library.add(faUnlock)
 library.add(faLockOpen)
+library.add(faCheck)
+library.add(faXmark)
 
 function TableRow(props) {
   const {
     AccessionNumber,
     isHighlighted,
     AccessAuth,
+    StateAnalysis,
     modalities,
     PatientID,
     PatientName,
@@ -280,33 +309,35 @@ function TableRow(props) {
 
   const { t } = useTranslation('StudyList');
   let authorized;
-  // const accessAuthorized = async (studyInstanceUID) => {
-  //   if (window.config.authenticationRequired) {
-  //     const uri_params = {
-  //       baseURL: window.config.authenticationServer,
-  //       params: {
-  //         token: window.config.user.key,
-  //         studyID: studyInstanceUID,
-  //       }
-  //     }
-  //     const ax_rest = axios.create(uri_params);
-  //     let access = await ax_rest.get("/authOhif", {}).then(function(r) { return r.data; });
-  //     console.log(access)
-  //     return access;
-  //     // return access;
-  //   }
-  //   return true;
-  //
-  // }
-  // const test = accessAuthorized(StudyInstanceUID);
-  // console.log(test)
+  let stateanalysis;
+
   if (AccessAuth) {
     authorized = <div style={{color:"#88b160"}}> <FontAwesomeIcon icon="lock-open"/> </div>
   } else {
     authorized = <div style={{color:"#b14140"}}> <FontAwesomeIcon icon="lock"/> </div>
   }
+
+  if (StateAnalysis) {
+    stateanalysis = (
+        <div>
+          SEG &nbsp;
+          { StateAnalysis.segmentation && <FontAwesomeIcon icon="check" style={{color: '#88b160'}}/>}
+          { !StateAnalysis.segmentation && <FontAwesomeIcon icon="xmark" style={{color: "#b14140"}}/>}
+          &nbsp;&nbsp; Radiomics &nbsp;
+          { StateAnalysis.radiomics && <FontAwesomeIcon icon="check" style={{color: '#88b160'}}/>}
+          { !StateAnalysis.radiomics && <FontAwesomeIcon icon="xmark" style={{color: "#b14140"}}/>}
+          &nbsp;&nbsp; Diagnosis &nbsp;
+          { StateAnalysis.diagnosis && <FontAwesomeIcon icon="check" style={{color: '#88b160'}}/>}
+          { !StateAnalysis.diagnosis && <FontAwesomeIcon icon="xmark" style={{color: "#b14140"}} />}
+        </div>
+    )
+    //<Icon name="triangle" className="triangle" width="1.8em"/> <Icon name="fileexcel" className="fileexcel" width="1.8em"/> <Icon name="clipboardnotification" className="clipboardnotification" width="1.8em"/>
+  } else {
+    stateanalysis = <div> </div>
+  }
+
   const fctOnClick = (AccessAuth) => {
-    console.log(AccessAuth)
+
     if (AccessAuth  ) {
 
       handleClick(StudyInstanceUID)
@@ -318,6 +349,7 @@ function TableRow(props) {
       className={classNames({ active: isHighlighted })}
     >
       <td style={{ textAlign: 'center' }}>{authorized}</td>
+      <td style={{ textAlign: 'center' }}>{stateanalysis}</td>
       <td className={classNames({ 'empty-value': !PatientName })}>
         {PatientName || `(${t('Empty')})`}
       </td>
@@ -337,6 +369,7 @@ function TableRow(props) {
       className={classNames({ active: isHighlighted })}
     >
       <td style={{ textAlign: 'center' }}>{authorized}</td>
+      <td style={{ textAlign: 'center' }}>{stateanalysis}</td>
       <td className={classNames({ 'empty-value': !PatientName })}>
         {PatientName || `(${t('Empty')})`}
         <div style={{ color: '#60656f' }}>{PatientID}</div>
@@ -402,6 +435,7 @@ function TableRow(props) {
           {authorized}
         </div>
       </td>
+      <td style={{ textAlign: 'center' }}>{stateanalysis}</td>
       <td style={{ position: 'relative', overflow: 'hidden' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -472,6 +506,7 @@ TableRow.propTypes = {
   AccessionNumber: PropTypes.string.isRequired,
   isHighlighted: PropTypes.bool,
   AccessAuth: PropTypes.bool,
+  StateAnalysis: PropTypes.object,
   modalities: PropTypes.string,
   PatientID: PropTypes.string.isRequired,
   PatientName: PropTypes.string.isRequired,

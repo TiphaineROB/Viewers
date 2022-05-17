@@ -103,6 +103,36 @@ import envelopeSquare from './icons/envelope-square.svg';
 import creatisQuadriLogoInvertNew from './icons/creatis_quadri_logo_invert_new.svg'
 import awesommeTextLogo from './icons/awesomme-text-logo.svg'
 
+import cubeAxis from './icons/cube-axis.svg'
+import cubeColor from './icons/cube-color.svg'
+import cubeOutlined from './icons/cube-outlined.svg'
+import cubeColorblue from './icons/cube-colorblue.svg'
+import cubeColorgreen from './icons/cube-colorgreen.svg'
+
+import view from './icons/view.svg'
+import viewMulti from './icons/view-multi.svg'
+
+import axisX from './icons/axis-x.svg'
+import axisY from './icons/axis-y.svg'
+import axisZ from './icons/axis-z.svg'
+
+import notepad from './icons/notepad.svg'
+import segment from './icons/segment.svg'
+import chartanalysis from './icons/chartanalysis.svg'
+
+
+import clipboardnotification from './icons/clipboardnotification.svg'
+import clipboardresults from './icons/clipboardresults.svg'
+import clipboardsearch from './icons/clipboardsearch.svg'
+import fileselect from './icons/fileselect.svg'
+import filegraph from './icons/filegraph.svg'
+import fileexcel from './icons/fileexcel.svg'
+import table from './icons/table.svg'
+import select from './icons/select.svg'
+import excel from './icons/excel.svg'
+import capture from './icons/capture.svg'
+import triangle from './icons/triangle.svg'
+
 const ICONS = {
   eye,
   'eye-closed': eyeClosed,
@@ -194,6 +224,30 @@ const ICONS = {
   save: saveRegular,
   "creatis-logo": creatisQuadriLogoInvertNew,//logoCreatisInverse,
   "awesomme-text": awesommeTextLogo,
+  "cube-axis": cubeAxis,
+  "cube-color": cubeColor,
+  "cube-colorgreen": cubeColorgreen,
+  "cube-colorblue": cubeColorblue,
+  "cube-outlined": cubeOutlined,
+  "view": view,
+  "view-multi": viewMulti,
+  "axis-x": axisX,
+  "axis-y": axisY,
+  "axis-z": axisZ,
+  "notepad": notepad,
+  "chartanalysis": chartanalysis,
+  "segment": segment,
+  "clipboardresults": clipboardresults,
+  "clipboardsearch": clipboardsearch,
+  "clipboardnotification": clipboardnotification,
+  "filegraph": filegraph,
+  "fileselect": fileselect,
+  "table": table,
+  "excel": excel,
+  "fileexcel": fileexcel,
+  "capture": capture,
+  "select": select,
+  "triangle": triangle,
 };
 
 /**

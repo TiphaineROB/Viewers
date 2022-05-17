@@ -1,0 +1,264 @@
+@import url("https://www.w3schools.com/w3css/4/w3.css")
+
+.girderRadiomicsPanel
+  background-color: var(--primary-background-color)
+  height: 100%
+  width: 100%
+  display: flex
+  flex-direction: column
+  color: var(--text-primary-color)
+  padding: 20px
+
+  .subtitle
+    font-size: 14px
+    text-decoration: underline
+    font-weight 500
+    color #91b9cd
+    margin 1px
+    text-align center
+
+  /* Accordion styles */
+  .tabs {
+    border-radius: 4px;
+    overflow: auto;
+    box-shadow: 0 4px 4px -2px rgba(0, 0, 0, 0.5);
+    background: #91b9cd;
+    margin: 1rem 0;
+  }
+
+  .tab {
+    width: 100%;
+    color: white;
+    overflow: hidden;
+  }
+  .tab-switch {
+    position: absolute;
+    opacity: 0;
+    z-index: -1;
+  }
+  .tab-label {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4em;
+    background: #16202b;
+    border-right: 1px dotted #3c5d80;
+    color: #fff;
+    font-size: 12px;
+    font-weight: normal;
+    cursor: pointer;
+    /* Icon */
+  }
+  .tab-label:hover {
+    background: #3e5975;
+  }
+  .tab-label::after {
+    content: "❯";
+    width: 1em;
+    height: 1em;
+    text-align: center;
+    transition: all 0.35s;
+  }
+  .tab-content {
+    max-height: 0;
+    padding: 0 1em;
+    background: black;
+    transition: all 0.35s;
+    width: 100%;
+    font-size: small
+  }
+  .tab-close {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1em;
+    font-size: 0.75em;
+    background: #2c3e50;
+    cursor: pointer;
+  }
+  .tab-close:hover {
+    background: #1a252f;
+  }
+
+  input:checked + .tab-label {
+    background: #396B9E;
+  }
+  input:checked + .tab-label::after {
+    transform: rotate(90deg);
+  }
+  input:checked ~ .tab-content {
+    max-height: 100vh;
+    padding: 1em;
+  }
+
+  .seperator
+    border: 0.01em solid #44626f
+    width: 100%
+    margin-top: 3px
+    margin-bottom: 3px
+  
+  .seperatorLight
+    border: 0.001em solid #364F59
+    width: 100%
+    margin-top: 3px
+    margin-bottom: 3px
+  
+  
+  .actionInput
+    width: 100%
+    padding: 0px
+
+  .actionButton
+    -moz-box-shadow:0 1px 4px rgba(0,0,0,.3);
+    -webkit-box-shadow:0 1px 4px rgba(0,0,0,.3);
+    -moz-border-radius:1em;
+    -webkit-border-radius:1em;
+    border-radius:1em;
+    -webkit-background-clip:padding-box;
+    -moz-background-clip:padding;
+    background-clip:padding-box;
+    box-shadow:0 1px 4px rgba(0,0,0,.3);
+    border:1px solid #044062;
+    background:#396b9e;
+    font-weight:bold;
+    color:#fff;
+    text-shadow:0 1px 1px #194b7e;
+    background-image:-webkit-gradient(linear,left top,left bottom,from(#5f9cc5),to(#396b9e));
+    background-image:-webkit-linear-gradient(#5f9cc5,#396b9e);
+    background-image:-moz-linear-gradient(#5f9cc5,#396b9e);
+    background-image:-ms-linear-gradient(#5f9cc5,#396b9e);
+    background-image:-o-linear-gradient(#5f9cc5,#396b9e);
+    background-image:linear-gradient(#5f9cc5,#396b9e)
+
+    &:hover, &:active
+      -moz-box-shadow:0 1px 4px rgba(0,0,0,.3);
+      -webkit-box-shadow:0 1px 4px rgba(0,0,0,.3);
+      border:1px solid #00415e;
+      background-color:#4b88b6;
+      font-weight:bold;
+      color:#fff;
+      text-shadow:0 1px 1px #194b7e;
+      background:-webkit-gradient(linear,left top,left bottom,from(#6facd5),to(#4272a4));
+      background:-webkit-linear-gradient(#6facd5,#4272a4);
+      background:-moz-linear-gradient(#6facd5,#4272a4);
+      background:-ms-linear-gradient(#6facd5,#4272a4);
+      background:-o-linear-gradient(#6facd5,#4272a4);
+      background:linear-gradient(#6facd5,#4272a4);
+      -moz-border-radius:1em;
+      -webkit-border-radius:1em;
+      border-radius:1em;
+      -webkit-background-clip:padding-box;
+      -moz-background-clip:padding;
+      background-clip:padding-box;
+      box-shadow:0 1px 4px rgba(0,0,0,.3)
+
+    &:disabled
+      background-color: #95acbf
+
+    svg
+      margin-right: 4px
+      position: relative
+      top: 2px
+
+.itemFile
+  display: inline-block;
+  margin-top: 9px;
+  padding-left: 9px;
+  width: 90px;
+  border-left: 1px solid var(--text-secondary-color);
+  color: var(--text-primary-color);
+  
+  height: 30px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: normal;
+  cursor: pointer;
+  
+  .tab-files
+    display: flex;
+    width: 80%;
+         
+  .downloadButton
+    background-color: #fff; 
+
+.girderRadiomicsPanel .ui-btn-hover-b:hover {
+  -moz-box-shadow:0 1px 4px rgba(0,0,0,.3);
+ -webkit-box-shadow:0 1px 4px rgba(0,0,0,.3);
+ border:1px solid #00415e;
+ background-color:#4b88b6;
+ font-weight:bold;
+ color:#fff;
+ text-shadow:0 1px 1px #194b7e;
+ background:-webkit-gradient(linear,left top,left bottom,from(#6facd5),to(#4272a4));
+ background:-webkit-linear-gradient(#6facd5,#4272a4);
+ background:-moz-linear-gradient(#6facd5,#4272a4);
+ background:-ms-linear-gradient(#6facd5,#4272a4);
+ background:-o-linear-gradient(#6facd5,#4272a4);
+ background:linear-gradient(#6facd5,#4272a4);
+ -moz-border-radius:1em;
+ -webkit-border-radius:1em;
+ border-radius:1em;
+ -webkit-background-clip:padding-box;
+ -moz-background-clip:padding;
+ background-clip:padding-box;
+ box-shadow:0 1px 4px rgba(0,0,0,.3)
+}
+
+.girderRadiomicsPanel .ui-btn-hover-b {
+  -moz-box-shadow:0 1px 4px rgba(0,0,0,.3);
+ -webkit-box-shadow:0 1px 4px rgba(0,0,0,.3);
+ -moz-border-radius:1em;
+ -webkit-border-radius:1em;
+ border-radius:1em;
+ -webkit-background-clip:padding-box;
+ -moz-background-clip:padding;
+ background-clip:padding-box;
+ box-shadow:0 1px 4px rgba(0,0,0,.3);
+ border:1px solid #044062;
+ background:#396b9e;
+ font-weight:bold;
+ color:#fff;
+ text-shadow:0 1px 1px #194b7e;
+ background-image:-webkit-gradient(linear,left top,left bottom,from(#5f9cc5),to(#396b9e));
+ background-image:-webkit-linear-gradient(#5f9cc5,#396b9e);
+ background-image:-moz-linear-gradient(#5f9cc5,#396b9e);
+ background-image:-ms-linear-gradient(#5f9cc5,#396b9e);
+ background-image:-o-linear-gradient(#5f9cc5,#396b9e);
+ background-image:linear-gradient(#5f9cc5,#396b9e)
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary-color);
+  font-size: 12px;
+  margin-bottom: 0px;
+  height: 100%;
+}
+
+.section .header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--ui-gray-dark);
+  border-radius: 5px;
+  font-weight: bold;
+  padding: 10px 15px;
+}
+
+.scrollbar {
+  overflow-y: scroll;
+}
+
+#style-3::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  background-color: #000000;
+}
+
+#style-3::-webkit-scrollbar {
+  width: 6px;
+  background-color: #000000;
+}
+
+#style-3::-webkit-scrollbar-thumb {
+  background-color: #f5f5f5;
+}

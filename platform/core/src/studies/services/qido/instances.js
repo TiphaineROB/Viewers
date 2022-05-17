@@ -77,7 +77,6 @@ function resultDataToStudyMetadata(server, StudyInstanceUID, resultData) {
  */
 export default function Instances(server, StudyInstanceUID) {
   // TODO: Are we using this function anywhere?? Can we remove it?
-
   const config = {
     url: server.qidoRoot,
     headers: DICOMWeb.getAuthorizationHeader(server),

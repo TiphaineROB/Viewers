@@ -18,7 +18,6 @@ export default function searchStudies(server, filter) {
     return studySearchPromises.get(promiseKey);
   } else {
     const promise = Studies(server, filter);
-
     studySearchPromises.set(promiseKey, promise);
 
     return promise;

@@ -22,12 +22,14 @@ import UserManagerContext from '../context/UserManagerContext';
 import WhiteLabelingContext from '../context/WhiteLabelingContext';
 import AppContext from '../context/AppContext';
 
+import CustomImport from '../../../../extensions/script-pacs/src/CustomImport'
+
 const { urlUtil: UrlUtil } = OHIF.utils;
 
 function StudyListRoute(props) {
 
   const { history, server, user, studyListFunctionsEnabled } = props;
-  console.log(props)
+
   const [t] = useTranslation('Common');
   // ~~ STATE
   const [sort, setSort] = useState({
@@ -41,6 +43,7 @@ function StudyListRoute(props) {
     PatientID: '',
     AccessionNumber: '',
     AccessAuth: null,
+    StateAnalysis: null,
     StudyDate: '',
     modalities: '',
     StudyDescription: '',
@@ -230,6 +233,9 @@ function StudyListRoute(props) {
           </UserManagerContext.Consumer>
         )}
       </WhiteLabelingContext.Consumer>
+
+      <CustomImport/>
+
       <div className="study-list-header">
         <div className="header">
           <h1 style={{ fontWeight: 300, fontSize: '22px' }}>
@@ -335,6 +341,7 @@ async function getStudyList(
   pageNumber,
   displaySize
 ) {
+
   const {
     allFields,
     patientNameOrId,
@@ -371,6 +378,7 @@ async function getStudyList(
           params: {
             token: window.config.user.key,
             studyID: studyInstanceUID,
+            sourceType: window.config.servers.dicomWeb[0].sourceType,
           }
         }
         const ax_rest = axios.create(uri_params);
@@ -383,15 +391,69 @@ async function getStudyList(
       }
       return true;
   }
+
+  const stepsDiagnosisRequest = async (studyInstanceUID) => {
+      if (window.config.authenticationRequired) {
+        const uri_params = {
+          baseURL: window.config.authenticationServer,
+          params: {
+            orthanc: 'http://localhost/proxy/dicom-web',
+            token: window.config.user.key,
+            url: window.config.authenticationServer
+            }
+        }
+        const ax_rest = axios.create(uri_params);
+        let access = await ax_rest.get("/aimodulesOHIF", {})
+              .then(
+                function(r) {
+                    return r.data;
+              });
+        return access;
+      }
+      return true;
+  }
+  const stepsRadiomicsRequest = async (studyInstanceUID) => {
+      if (window.config.authenticationRequired) {
+        const uri_params = {
+          baseURL: window.config.authenticationServer,
+          params: {
+            orthanc: 'http://localhost/proxy/dicom-web',
+            token: window.config.user.key,
+            url: window.config.authenticationServer
+            }
+        }
+        const ax_rest = axios.create(uri_params);
+        let access = await ax_rest.get("/radiomicsOHIF", {})
+              .then(
+                function(r) {
+                    return r.data;
+              });
+        return access;
+      }
+      return true;
+  }
+
+  const stepsRadiomicsResponse = await stepsRadiomicsRequest()
+  const stepsDiagnosisResponse = await stepsDiagnosisRequest()
+
   let resultingArr = [];
   for (let study of studies){
     const result = await accessAuthorized(study.StudyInstanceUID);
+
     resultingArr.push(result)
   }
+
+  const resultFilterAnalysis = _sortAnalysis(studies, stepsRadiomicsResponse,
+        stepsDiagnosisResponse, filters.StateAnalysis)
+  studies = resultFilterAnalysis[0]
+  let filterAnalysis = resultFilterAnalysis[1]
   const resultFilterAuth = _sortAccess(studies, resultingArr, filters.AccessAuth)
   studies = resultFilterAuth[0]
   resultingArr = resultFilterAuth[1]
-  // Only the fields we use
+
+
+
+   // Only the fields we use
   const mappedStudies = studies.map( (study, index) => {
     const PatientName =
       typeof study.PatientName === 'string' ? study.PatientName : undefined;
@@ -411,8 +473,10 @@ async function getStudyList(
       // studyId: "No Study ID"
       StudyInstanceUID: study.StudyInstanceUID, // "1.3.6.1.4.1.5962.99.1.3814087073.479799962.1489872804257.3.0"
       UserHasAccess: resultingArr[index],
+      StepsAnalysis: filterAnalysis[study.StudyInstanceUID],
       // StudyTime: "160956.0"
     };
+
   });
 
   // For our smaller displays, map our field name to a single
@@ -465,6 +529,64 @@ function _sortAccess(studies, accessedStudies, activeFilter) {
       return [filteredstudies, filteredaccessed];
     }
 }
+
+/**
+*
+* @param {object[]} studies - Array of studies to sort
+* @param {object} radiomicsResponse
+* @param {object} diagnosisResponse
+* @param {bool} activeFilter - if checkbox is checked
+* @returns
+*
+**/
+function _sortAnalysis(studies, radiomicsResponse, diagnosisResponse, activeFilter) {
+    let dictResults = {}
+    let filteredStudies = []
+
+    const metadataRadiomics = radiomicsResponse ? radiomicsResponse.metadata : [];
+    const filesDiagnosis = diagnosisResponse.files;
+
+    for (var idx in studies) {
+      const study = studies[idx]
+
+      let checkFiles = filesDiagnosis.map(file => {
+
+        if (file.study === study.StudyInstanceUID) {
+          return file;
+        }
+      }).filter(element => {
+        return element!== undefined
+      });
+
+      let checkRadiomics = metadataRadiomics.map(file => {
+        if (file.study === study.StudyInstanceUID) {
+          return file;
+        }
+      }).filter(element => {
+        return element!== undefined
+      });
+
+
+      let res = {
+        segmentation: study.modalities.includes("SEG"),
+        radiomics: checkRadiomics.length > 0 ? true : false,
+        diagnosis: checkFiles.length > 0 ? true : false,
+      }
+
+      let filterok=false;
+      if (res.segmentation!=true || res.radiomics!=true || res.diagnosis!=true)
+      {
+        filterok = true;
+      }
+      if (activeFilter===null || activeFilter===false || (activeFilter===true && filterok===true) )
+      {
+        filteredStudies.push(study)
+        dictResults[study.StudyInstanceUID] = res;
+      }
+    }
+    return [filteredStudies,  dictResults]
+}
+
 
 /**
  *

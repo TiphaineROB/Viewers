@@ -86,7 +86,7 @@ function resultDataToStudies(resultData) {
   const studies = [];
 
   if (!resultData || !resultData.length) return;
-
+  // console.log(resultData)
   resultData.forEach(study =>
     studies.push({
       StudyInstanceUID: DICOMWeb.getString(study['0020000D']),
@@ -117,6 +117,7 @@ function resultDataToStudies(resultData) {
 
 export default function Studies(server, filter) {
   const { staticWado } = server;
+  console.log("Studies ----")
   const config = {
     ...server,
     url: server.qidoRoot,
@@ -139,6 +140,7 @@ export default function Studies(server, filter) {
   const options = {
     queryParams,
   };
+
 
   return dicomWeb.searchForStudies(options).then(resultDataToStudies);
 }

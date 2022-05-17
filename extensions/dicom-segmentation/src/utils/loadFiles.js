@@ -30,6 +30,7 @@ import {
  *
  *
  * @param {*} file
+ * @param {*} activeViewport
  * @param {*} currentDisplaySet
  * @param {*} callback
  * @returns
@@ -37,6 +38,7 @@ import {
  */
 export default async function loadFiles(
   file,
+  activeViewport,
   currentDisplaySet,
   callback
 ) {
@@ -104,15 +106,19 @@ export default async function loadFiles(
     var enabledX = enabledElement.image.columns,
       enabledY = enabledElement.image.rows,
       enabledZ = enabledSeries.length,
-      enabledSpacingX = enabledElement.image.columnPixelSpacing,
-      enabledSpacingY = enabledElement.image.rowPixelSpacing,
-      enabledSpacingZ = enabledSeries[0]['00180050'].Value[0];
+      enabledSpacingX = enabledElement.image.columnPixelSpacing.toFixed(5),
+      enabledSpacingY = enabledElement.image.rowPixelSpacing.toFixed(5),
+      enabledSpacingZ = enabledSeries[0]['00180050'].Value[0].toFixed(5);
     var niiX = niiHeader.dims[1],
       niiY = niiHeader.dims[2],
       niiZ = niiHeader.dims[3],
-      niiSpacingX = niiHeader.pixDims[1],
-      niiSpacingY = niiHeader.pixDims[2],
-      niiSpacingZ = niiHeader.pixDims[3];
+      niiSpacingX = niiHeader.pixDims[1].toFixed(5),
+      niiSpacingY = niiHeader.pixDims[2].toFixed(5),
+      niiSpacingZ = niiHeader.pixDims[3].toFixed(5);
+
+      console.log(enabledX, enabledY, enabledZ)
+      console.log(enabledSpacingX, enabledSpacingY, enabledSpacingZ)
+      console.log(niiHeader, niiImage, niiExt)
 
     if ( enabledX !== niiX || enabledY !== niiY || enabledZ !== niiZ ||
         enabledSpacingX !== niiSpacingX || enabledSpacingY !== niiSpacingY) {
@@ -134,7 +140,7 @@ export default async function loadFiles(
             color: color
           }
           const dicomData = createDCM(enabledElement, enabledSeries, niiHeader, niiImage, values)
-          callback(dicomData)
+          callback(dicomData, true, activeViewport)
         };
 
         uiModalService.show({
@@ -252,6 +258,8 @@ export default async function loadFiles(
     derivated.dataset._vrMap = {
         PixelData: "OB"
     }
+
+    console.log(derivated)
     const dicomDerived = dcmjs.data.datasetToDict(derivated.dataset)
 
     let bufferDerived = Buffer.from(dicomDerived.write());
@@ -459,60 +467,3 @@ export default async function loadFiles(
 //       console.log(e)
 //   });
 //   break;
-// NOt working
-// var test = new dcmjs.data.ReadBufferStream(niiImage, true);
-// console.log('Buffer stream :', test.buffer)
-//
-// // not working
-// test = new dcmjs.data.BitArray.unpack(niiImage)
-// console.log('UNpack : ', test.buffer)
-//
-// // not working
-// test = new dcmjs.data.BitArray.pack(niiImage)
-// console.log('Pack :', test.buffer)
-//
-// test = new dcmjs.data.BitArray.getBytesForBinaryFrame(dataset.rows*dataset.columns)
-// console.log('getBytes :', test)
-//
-// test = new dcmjs.data.WriteBufferStream(niiImage, true)
-// console.log('write buffer  stream :', test)
-
-
-// Eventuellement pour créer des labelsmaps2D
-// dataset.SegmentSequence.forEach(segment => {
-//   const cielab = segment.RecommendedDisplayCIELabValue;
-//   const rgba = dcmjs.data.Colors.dicomlab2RGB(cielab).map(x => Math.round(x * 255));
-//   rgba.push(255);
-//
-//   console.log(segment)
-//   segments[segment.SegmentNumber] = {
-//       color: rgba,
-//       functionalGroups: [],
-//       offset: null,
-//       size: null,
-//       pixelData: null,
-//     }
-//
-//   dataset.PerFrameFunctionalGroupsSequence.forEach(functionalGroup => {
-//     let segmentNumber = functionalGroup.SegmentIdentificationSequence[0].ReferencedSegmentNumber;
-//     segments[segmentNumber].functionalGroups.push(functionalGroup);
-//   })
-//
-//   let frameSize = Math.ceil(dataset.Rows * dataset.Columns / 1);
-//   let nextOffset = 0;
-//
-//   Object.keys(segments).forEach(segmentKey => {
-//     const segment = segments[segmentKey];
-//     segment.numberOfFrames = segment.functionalGroups.length;
-//
-//     segment.size = segment.numberOfFrames * frameSize;
-//     segment.offset = nextOffset;
-//     nextOffset  = segment.offset + segment.size
-//     const packedSegment = dataset.PixelData.slice(segment.offset, nextOffset);
-//     segment.pixelData = dcmjs.data.BitArray.unpack(packedSegment);
-//
-//   });
-// });
-// //dataset.PixelData = segments[1].pixelData.buffer
-// console.log(segments)
-// console.log(dataset)

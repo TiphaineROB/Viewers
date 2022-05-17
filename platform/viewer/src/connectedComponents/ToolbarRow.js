@@ -371,8 +371,9 @@ function _getVisibleToolbarButtons() {
         toolbarButtonDefinitions.push(definition);
       }
     });
-  });
 
+  });
+  console.log(toolbarButtonDefinitions)
   return toolbarButtonDefinitions;
 }
 
