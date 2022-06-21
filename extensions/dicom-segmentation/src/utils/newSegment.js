@@ -147,10 +147,10 @@ export default async function newSegment(
 
     const part10Buffer = dicomDerived.write();
 
-    var FileSaver = require('file-saver');
-    let filename = `test-toserver.dcm`
-    var blob = new Blob([part10Buffer], { type: 'text/plain;charset=utf-8' });
-    FileSaver.saveAs(blob, filename);
+    // var FileSaver = require('file-saver');
+    // let filename = `test-toserver.dcm`
+    // var blob = new Blob([part10Buffer], { type: 'text/plain;charset=utf-8' });
+    // FileSaver.saveAs(blob, filename);
     callback(dicomDerived)
   }
 

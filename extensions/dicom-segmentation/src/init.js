@@ -1,5 +1,7 @@
 import csTools from 'cornerstone-tools';
 import DICOMSegTempCrosshairsTool from './tools/DICOMSegTempCrosshairsTool';
+import CustomTool from './tools/CustomTool';
+import CustomBrush from './tools/CustomBrush';
 
 /**
  *
@@ -47,4 +49,9 @@ export default function init({ servicesManager, configuration = {} }) {
   });
 
   csTools.addTool(DICOMSegTempCrosshairsTool);
+  csTools.addTool(CustomTool);
+  //csTools.setToolEnabled()
+  // csTools.setToolActive('CustomTool', {isMouseActive: true});
+  // csTools.addTool(CustomBrush);
+  // csTools.setToolEnabled('CustomBrush');
 }
