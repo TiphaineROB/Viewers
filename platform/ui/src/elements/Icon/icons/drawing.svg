@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15)"
+   sodipodi:docname="drawing.svg">
+  <defs
+     id="defs2">
+    <linearGradient
+       id="linearGradient881"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#7f8ed4;stop-opacity:1;"
+         offset="0"
+         id="stop879" />
+    </linearGradient>
+    <font
+       horiz-adv-x="1024"
+       id="font12"
+       inkscape:label="font 1">
+      <font-face
+         units-per-em="1024"
+         id="font-face14"
+         font-family="SVGFont 1" />
+      <missing-glyph
+         d="M0,0h1000v1024h-1000z"
+         id="missing-glyph16" />
+    </font>
+    <font
+       horiz-adv-x="1024"
+       id="font18"
+       inkscape:label="font 2">
+      <font-face
+         units-per-em="1024"
+         id="font-face20"
+         font-family="SVGFont 2" />
+      <missing-glyph
+         d="M0,0h1000v1024h-1000z"
+         id="missing-glyph22" />
+    </font>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter28"
+       x="-0.0025096491"
+       width="1.0050193"
+       y="-0.0022995311"
+       height="1.0045991">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.0073922901"
+         id="feGaussianBlur30" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter50"
+       x="-0.004882664"
+       width="1.0097653"
+       y="-0.0047200885"
+       height="1.0094402">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.044417093"
+         id="feGaussianBlur52" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="400"
+     inkscape:cy="560"
+     inkscape:document-units="mm"
+     inkscape:current-layer="svg8"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1043"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     id="layer1"
+     inkscape:export-xdpi="96"
+     inkscape:export-ydpi="96">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#b4e2ff;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter28)"
+       x="144.42332"
+       y="134.37514"
+       id="text26"
+       inkscape:label="text26"><tspan
+         sodipodi:role="line"
+         id="tspan32"
+         x="144.42332"
+         y="134.37514">Ai</tspan></text>
+    <g
+       style="fill:currentColor"
+       id="g46"
+       transform="matrix(0.05012022,0,0,0.05919344,124.06365,109.34296)">
+      <path
+         d="m 167.02,309.34 c -40.12,2.58 -76.53,17.86 -97.19,72.3 -2.35,6.21 -8,9.98 -14.59,9.98 -11.11,0 -45.46,-27.67 -55.25,-34.35 C 0,439.62 37.93,512 128,512 c 75.86,0 128,-43.77 128,-120.19 0,-3.11 -0.65,-6.08 -0.97,-9.13 z M 457.89,0 C 442.73,0 428.52,6.71 417.68,16.45 213.27,199.05 192,203.34 192,257.09 c 0,13.7 3.25,26.76 8.73,38.7 l 63.82,53.18 c 7.21,1.8 14.64,3.03 22.39,3.03 62.11,0 98.11,-45.47 211.16,-256.46 C 505.48,81.19 512,65.69 512,49.55 512,20.64 486,0 457.89,0 Z"
+         id="path35" />
+    </g>
+  </g>
+</svg>

@@ -26,6 +26,9 @@ import CustomImport from '../../../../extensions/script-pacs/src/CustomImport'
 
 const { urlUtil: UrlUtil } = OHIF.utils;
 
+
+const cohorts = ["Osteo", "Breats", "COVID-CTPRED"];
+
 function StudyListRoute(props) {
 
   const { history, server, user, studyListFunctionsEnabled } = props;
@@ -274,6 +277,7 @@ function StudyListRoute(props) {
           onFilterChange={handleFilterChange}
           studyListDateFilterNumDays={appConfig.studyListDateFilterNumDays}
           displaySize={displaySize}
+          cohorts={cohorts}
         />
         {/* PAGINATION FOOTER */}
         <TablePagination
@@ -371,6 +375,7 @@ async function getStudyList(
   });
 
   // Custom check if user is authorized to access this resource
+
   const accessAuthorized = async (studyInstanceUID) => {
       if (window.config.authenticationRequired) {
         const uri_params = {
@@ -443,14 +448,29 @@ async function getStudyList(
     resultingArr.push(result)
   }
 
-  const resultFilterAnalysis = _sortAnalysis(studies, stepsRadiomicsResponse,
-        stepsDiagnosisResponse, filters.StateAnalysis)
-  studies = resultFilterAnalysis[0]
-  let filterAnalysis = resultFilterAnalysis[1]
-  const resultFilterAuth = _sortAccess(studies, resultingArr, filters.AccessAuth)
-  studies = resultFilterAuth[0]
-  resultingArr = resultFilterAuth[1]
+  const customFilters = {
+    StateAnalysis: filters.StateAnalysis,
+    AccessAuth: filters.AccessAuth,
+    Cohort: filters.Cohort
+  }
 
+  const cohortsArr = ["Osteo", "Osteo", "Osteo", "Osteo", "COVID-CTPRED"];
+
+  const resultFilter = _sortCustom(studies, stepsRadiomicsResponse, stepsDiagnosisResponse,
+    resultingArr, cohortsArr, customFilters)
+
+  studies = resultFilter[0]
+  const filterAccessed = resultFilter[1]
+  const filterCohorts  = resultFilter[2]
+  const filterAnalysis = resultFilter[3]
+
+  // const resultFilterAnalysis = _sortAnalysis(studies, stepsRadiomicsResponse,
+  //       stepsDiagnosisResponse, filters.StateAnalysis)
+  // studies = resultFilterAnalysis[0]
+  // let filterAnalysis = resultFilterAnalysis[1]
+  // const resultFilterAuth = _sortAccess(studies, resultingArr, filters.AccessAuth)
+  // studies = resultFilterAuth[0]
+  // resultingArr = resultFilterAuth[1]
 
 
    // Only the fields we use
@@ -472,8 +492,9 @@ async function getStudyList(
       StudyDescription: study.StudyDescription, // "BRAIN"
       // studyId: "No Study ID"
       StudyInstanceUID: study.StudyInstanceUID, // "1.3.6.1.4.1.5962.99.1.3814087073.479799962.1489872804257.3.0"
-      UserHasAccess: resultingArr[index],
+      UserHasAccess: filterAccessed[index],
       StepsAnalysis: filterAnalysis[study.StudyInstanceUID],
+      Cohort: filterCohorts[index]
       // StudyTime: "160956.0"
     };
 
@@ -504,6 +525,85 @@ async function getStudyList(
 
   return result;
 }
+
+
+/**
+*
+* @param {object[]} studies - Array of studies to sort
+* @param {object} radiomicsResponse
+* @param {object} diagnosisResponse
+* @param {bool[]} accessedStudies - Array with booleans for access value for each study
+* @param {bool[]} cohorts - Array with booleans for access value for each study
+* @param {bool} filters - if checkbox is checked
+* @returns
+*
+**/
+function _sortCustom(studies, radiomicsResponse, diagnosisResponse,
+      accessedStudies, cohorts, filters) {
+
+    let filteredStudies = [];
+    let filteredAccessed = [];
+    let filteredCohorts = [];
+    let dictStateAnalysis = {};
+
+    const metadataRadiomics = radiomicsResponse ? radiomicsResponse.metadata : [];
+    const filesDiagnosis = diagnosisResponse.files;
+
+    for (var i in studies) {
+      const study = studies[i]
+      let checkStateFilter = false;
+      let checkAccessFilter = false;
+      let checkCohortFilter = false;
+
+      console.log(studies, radiomicsResponse, diagnosisResponse, accessedStudies, cohorts)
+
+      let checkFiles = filesDiagnosis.filter(file => {
+          return file.study === study.StudyInstanceUID;
+      })
+
+      let checkRadiomics = metadataRadiomics.filter(file => {
+        return file.study === study.StudyInstanceUID;
+      });
+
+      let res = {
+        segmentation: study.modalities.includes("SEG"),
+        radiomics: checkRadiomics.length > 0 ? true : false,
+        diagnosis: checkFiles.length > 0 ? true : false,
+      }
+
+      if (res.segmentation===true && res.radiomics===true && res.diagnosis===true && filters.StateAnalysis===true)
+      {
+
+        console.log("Filter state analysis active")
+        continue // complete so if filter active this should not appear
+      }
+
+      if ( accessedStudies[i] === false && filters.AccessAuth === true )
+      {
+        console.log("Filter accessed ")
+        continue // not accessible and filter active, this study should not appear
+      }
+
+
+      console.log(filters.Cohort)
+
+      if (filters.Cohort!=null && filters.Cohort != "all" && filters.Cohort != cohorts[i])
+      {
+        console.log("")
+        continue // If filter active then should be name of active cohort and should match study cohort
+      }
+
+      // All conditions regarding filters where checked
+      console.log("All check were complete")
+      filteredStudies.push(study)
+      filteredAccessed.push(accessedStudies[i])
+      filteredCohorts.push(cohorts[i])
+      dictStateAnalysis[study.StudyInstanceUID] = res;
+
+    }
+    return [filteredStudies, filteredAccessed, filteredCohorts, dictStateAnalysis]
+}
+
 
 /**
 *

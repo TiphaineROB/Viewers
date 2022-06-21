@@ -34,6 +34,7 @@ function TableSearchFilter(props) {
     sortDirection,
     // TODO: Rename
     studyListDateFilterNumDays,
+    cohorts,
   } = props;
 
   const { studyDateTo, studyDateFrom } = values || {};
@@ -84,13 +85,26 @@ function TableSearchFilter(props) {
         const sortIcon = isSortField ? sortIconForSortField : sortIcons[0];
         return (
           <th key={`${fieldName}-${i}`}>
-            <label
-              htmlFor={`filter-${fieldName}`}
-              onClick={() => onSort(fieldName)}
-            >
-              {`${displayText}`}
-              <Icon name={sortIcon} style={{ fontSize: '15px' }} />
-            </label>
+            { fieldName === 'Cohort' &&
+              <label
+                htmlFor={`filter-${fieldName}`}
+                style= {{marginTop: "-30px"}}
+                onClick={() => onSort(fieldName)}
+              >
+                {`${displayText}`}
+                <Icon name={sortIcon} style={{ fontSize: '15px' }} />
+              </label>
+            }
+            {
+              fieldName != "Cohort" &&
+              <label
+                htmlFor={`filter-${fieldName}`}
+                onClick={() => onSort(fieldName)}
+              >
+                {`${displayText}`}
+                <Icon name={sortIcon} style={{ fontSize: '15px' }} />
+              </label>
+            }
             {inputType === 'text' && (
 
               <input
@@ -140,6 +154,33 @@ function TableSearchFilter(props) {
                 </tbody>
               </table>
 
+            )}
+            {inputType === 'list' && (
+              <div style={{ marginTop: "7px", display: 'flex', justifyContent: 'center' }}>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td width="80%">
+                        <select
+                          id={`filter-${fieldName}`}
+                          className="DateRangePicker_select"
+                          onChange={ e => onValueChange(fieldName, e.target.options[e.target.selectedIndex].value)}
+                        >
+                          <option value="all"> no selection </option>
+                          {
+                            cohorts.map( (val, index) => {
+                                let elem = (
+                                  <option value={val}>{val}</option>
+                                )
+                                return elem;
+                            })
+                          }
+                        </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             )}
             {inputType === 'date-range' && (
               // https://github.com/airbnb/react-dates
@@ -199,7 +240,7 @@ TableSearchFilter.propTypes = {
     PropTypes.shape({
       displayText: PropTypes.string.isRequired,
       fieldName: PropTypes.string.isRequired,
-      inputType: PropTypes.oneOf(['text', 'date-range', 'bool', 'logo']).isRequired,
+      inputType: PropTypes.oneOf(['text', 'date-range', 'bool', 'logo', "list"]).isRequired,
       size: PropTypes.number.isRequired,
     })
   ).isRequired,
@@ -207,6 +248,7 @@ TableSearchFilter.propTypes = {
   onSort: PropTypes.func.isRequired,
   sortFieldName: PropTypes.string,
   sortDirection: PropTypes.oneOf([null, 'asc', 'desc']),
+  cohorts: PropTypes.object,
 };
 
 TableSearchFilter.defaultProps = {};
