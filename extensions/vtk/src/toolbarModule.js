@@ -44,33 +44,36 @@ const definitions = [
   //     },
   //   ],
   // },
-  {
-    id: 'Crosshairs',
-    label: 'Crosshairs',
-    icon: 'crosshairs',
-    //
-    type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
-    commandName: 'enableCrosshairsTool',
-    commandOptions: {},
-  },
-  {
-    id: 'WWWC',
-    label: 'WWWC',
-    icon: 'level',
-    //
-    type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
-    commandName: 'enableLevelTool',
-    commandOptions: {},
-  },
-  {
-    id: 'Reset',
-    label: 'Reset',
-    icon: 'reset',
-    //
-    type: TOOLBAR_BUTTON_TYPES.COMMAND,
-    commandName: 'resetMPRView',
-    commandOptions: {},
-  },
+  // {
+  //   id: 'Crosshairs',
+  //   label: 'Crosshairs',
+  //   icon: 'crosshairs',
+  //   //
+  //   type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+  //   commandName: 'enableCrosshairsTool',
+  //   commandOptions: {},
+  //   context: 'ACTIVE_VIEWPORT::VTK',
+  // },
+  // {
+  //   id: 'WWWC',
+  //   label: 'WWWC',
+  //   icon: 'level',
+  //   //
+  //   type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+  //   commandName: 'enableLevelTool',
+  //   commandOptions: {},
+  //   context: 'ACTIVE_VIEWPORT::VTK',
+  // },
+  // {
+  //   id: 'Reset',
+  //   label: 'Reset',
+  //   icon: 'reset',
+  //   //
+  //   type: TOOLBAR_BUTTON_TYPES.COMMAND,
+  //   commandName: 'resetMPRView',
+  //   commandOptions: {},
+  //   context: 'ACTIVE_VIEWPORT::VTK',
+  // },
   /*
   {
     id: 'Rotate',
@@ -121,49 +124,50 @@ const definitions = [
     commandOptions: {},
   },
   */
-  {
-    id: 'changeSlabThickness',
-    label: 'Slab Thickness',
-    icon: 'soft-tissue',
-    CustomComponent: SlabThicknessToolbarComponent,
-    commandName: 'setSlabThickness',
-    actionButton: {
-      id: 'setSlabThickness',
-      label: 'slider',
-      type: TOOLBAR_BUTTON_TYPES.COMMAND,
-      commandName: 'setSlabThickness',
-      commandOptions: {},
-    },
-    deactivateButton: {
-      id: 'setBlendModeToComposite',
-      type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
-      commandName: 'setBlendModeToComposite',
-      commandOptions: {},
-    },
-    operationButtons: [
-      {
-        id: 'setBlendModeToMaximumIntensity',
-        label: 'MIP',
-        type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
-        commandName: 'setBlendModeToMaximumIntensity',
-        commandOptions: {},
-      },
-      {
-        id: 'setBlendModeToMinimumIntensity',
-        label: 'MinIP',
-        type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
-        commandName: 'setBlendModeToMinimumIntensity',
-        commandOptions: {},
-      },
-      {
-        id: 'setBlendModeToAverageIntensity',
-        label: 'AvgIP',
-        type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
-        commandName: 'setBlendModeToAverageIntensity',
-        commandOptions: {},
-      },
-    ],
-  },
+  // {
+  //   id: 'changeSlabThickness',
+  //   label: 'Slab Thickness',
+  //   icon: 'soft-tissue',
+  //   CustomComponent: SlabThicknessToolbarComponent,
+  //   context: 'ACTIVE_VIEWPORT::VTK',
+  //   commandName: 'setSlabThickness',
+  //   actionButton: {
+  //     id: 'setSlabThickness',
+  //     label: 'slider',
+  //     type: TOOLBAR_BUTTON_TYPES.COMMAND,
+  //     commandName: 'setSlabThickness',
+  //     commandOptions: {},
+  //   },
+  //   deactivateButton: {
+  //     id: 'setBlendModeToComposite',
+  //     type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+  //     commandName: 'setBlendModeToComposite',
+  //     commandOptions: {},
+  //   },
+  //   operationButtons: [
+  //     {
+  //       id: 'setBlendModeToMaximumIntensity',
+  //       label: 'MIP',
+  //       type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+  //       commandName: 'setBlendModeToMaximumIntensity',
+  //       commandOptions: {},
+  //     },
+  //     {
+  //       id: 'setBlendModeToMinimumIntensity',
+  //       label: 'MinIP',
+  //       type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+  //       commandName: 'setBlendModeToMinimumIntensity',
+  //       commandOptions: {},
+  //     },
+  //     {
+  //       id: 'setBlendModeToAverageIntensity',
+  //       label: 'AvgIP',
+  //       type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+  //       commandName: 'setBlendModeToAverageIntensity',
+  //       commandOptions: {},
+  //     },
+  //   ],
+  // },
   {
     id: '2DMPR',
     label: '2D MPR',
@@ -188,5 +192,5 @@ const definitions = [
 
 export default {
   definitions,
-  defaultContext: 'ACTIVE_VIEWPORT::VTK',
+  //defaultContext: 'ACTIVE_VIEWPORT::VTK',
 };

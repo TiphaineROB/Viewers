@@ -3,10 +3,11 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import './GirderAIModules.styl';
 import GirderClient from '../services/GirderClient';
-import { utils, classes, UINotificationService } from '@ohif/core';
+import { utils, classes, UINotificationService, DICOMWeb } from '@ohif/core';
 
 const { studyMetadataManager, xhrRetryRequestHook} = utils;
 const { MetadataProvider } = classes;
+import { api } from 'dicomweb-client';
 
 import { Icon } from '@ohif/ui';
 
@@ -58,7 +59,40 @@ export default class GirderDiagnosisPanel extends Component {
     this.segments = [];
     this.radiomics = {};
 
-  }
+    this.WantedKeys = [
+        "PatientID", "PatientBirthDate", "PatientPosition", "PatientSex",
+        "ClinicalTrialProtocolID", "ClinicalTrialSiteID",
+        "AccessionNumber", "AcquisitionDate", "AcquisitionTime", "AcquisitionNumber", "AcquisitionMatrix",
+        "ContentDate", "ContentTime", "Columns", "Rows",
+        "SpecificCharacterSet", "StudyDate", "StudyTime", "StudyDescription", "StudyInstanceUID",
+        "SeriesDate", "SeriesTime", "SeriesNumber", "SeriesInstanceUID",
+        "InstitutionName", "ReferringPhysicianName", "Manufacturer", "ManufacturerModelName", "DeviceSequence",
+        "PatientPosition", "PatientOrientation", "ImageType",  "ContrastBolusAgent", "SamplesPerPixel", "PixelSpacing",
+        "SliceThickness", "ImagePositionPatient", "ImageOrientationPatient", "Modality"
+      ]
+    this.WantedKeysMR = [
+      "ScanningSequence",
+      "SequenceVariant",
+      "ScanOptions",
+      "MRAcquisitionType",
+      "SequenceName",
+      "AngioFlag",
+      "RepetitionTime",
+      "EchoTime",
+      "AcquisitionMatrix",
+      "SpacingBetweenSlices",
+      "EchoTrainLength",
+      "ViewCodeSequence",
+      "MagneticFieldStrength"
+    ];
+    this.WantedKeysCT = [
+      "ScanOptions",
+      "KVP",
+      "RescaleIntercept",
+      "RescaleSlope",
+      "ViewCodeSequence",
+    ];
+  };
 
   async componentDidMount() {
     await this.onInfo();
@@ -126,7 +160,7 @@ export default class GirderDiagnosisPanel extends Component {
       url: window.config.authenticationServer,
     }
 
-    const response = await this.client().info(params);  
+    const response = await this.client().info(params);
     const response2 = await this.client().infoDiagnosisPanel(params);
 
     if (response.status !== 200 || response.data.status !== 200 || response2.status !== 200 || response2.data.status !== 200) {
@@ -321,6 +355,75 @@ export default class GirderDiagnosisPanel extends Component {
   onDiagFile = async () => {
   }
 
+  onClickDownload = async () => {
+    console.log("Download metadata in a csv file ?")
+    const dcmjs = require('dcmjs')
+
+    const { viewports, studies, activeIndex } = this.props;
+    this.viewConstants = this.getViewConstants(viewports, studies, activeIndex);
+
+    const config = {
+      url: window.config.servers.dicomWeb[0].qidoRoot,
+      headers: DICOMWeb.getAuthorizationHeader(),
+      requestHooks: [xhrRetryRequestHook()],
+    };
+    const dicomWeb = new api.DICOMwebClient(config);
+
+
+    var options = {
+      studyInstanceUID: this.viewConstants.StudyInstanceUID,
+      seriesInstanceUID: this.viewConstants.SeriesInstanceUID,
+    }
+
+    const series = await dicomWeb.retrieveSeries(options)
+    const instances = series.map(instance => {
+      var dicomData = dcmjs.data.DicomMessage.readFile(instance);
+      const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
+        dicomData.dict
+      );
+      return dataset
+    })
+
+    const metadata = instances[0]; // all metadata without filters
+
+    console.log(metadata)
+    let wantedKeysModality = this.WantedKeys;
+
+    if (instances[0].Modality==="MR"){
+      wantedKeysModality = wantedKeysModality.concat(this.WantedKeysMR);
+    } else if (instances[0].Modality=="CT"){
+      wantedKeysModality = wantedKeysModality.concat(this.WantedKeysCT);
+    }
+
+    console.log(wantedKeysModality)
+
+    let strmetadata = '';
+    for (const key of wantedKeysModality)
+    {
+      let addstr = key+'\t';
+      strmetadata+=addstr;
+    }
+    strmetadata+='\n'
+    // let strmetadata = Object.keys(metadata).filter( (key) => WantedKeys.includes(key)).join('\t');
+
+    for (const key of wantedKeysModality)
+    {
+      const keys = Object.keys(metadata).map( k => { return k;})
+      let addstr = '';
+      if ( keys.includes(key)) {
+        addstr+=metadata[key]
+      }
+      addstr+='\t';
+      strmetadata+=addstr;
+    }
+
+    var FileSaver = require('file-saver');
+    let filename = "metadata_" + instances[0].PatientID +"_SeriesNumber-"+ instances[0].SeriesNumber + "_"+ instances[0].Modality + ".csv"
+    var blob = new Blob([strmetadata], { type: 'text/plain;charset=utf-8' });
+    FileSaver.saveAs(blob, filename);
+
+  }
+
   render() {
 
     const { viewports, studies, activeIndex } = this.props;
@@ -464,7 +567,16 @@ export default class GirderDiagnosisPanel extends Component {
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             {diagnosisStep && <FontAwesomeIcon icon="check" style={{color: '#88b160'}}/>}
           </div>
-          <p> </p>
+          <p> &emsp;&emsp;
+          <button
+            className="ui-btn-hover-a"
+            onClick={this.onClickDownload}
+            title={'Download'}
+            style={{ display: "inline-block" }}
+          >
+            Download metadata
+          </button>
+          </p>
        </div>
        <div className="section">
          <div className="header">

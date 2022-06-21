@@ -44,6 +44,7 @@ function StudyList(props) {
     onSelectItem: handleSelectItem,
     studyListDateFilterNumDays,
     displaySize,
+    cohorts,
   } = props;
 
   const { t, ready: translationsAreReady } = useTranslation('StudyList');
@@ -59,6 +60,12 @@ function StudyList(props) {
       displayText: t('StateAnalysis'),
       fieldName: 'StateAnalysis',
       inputType: 'logo',
+      size: 200,
+    },
+    {
+      displayText: t('Cohort'),
+      fieldName: 'Cohort',
+      inputType: 'list',
       size: 200,
     },
     {
@@ -111,6 +118,12 @@ function StudyList(props) {
       displayText: t('StateAnalysis'),
       fieldName: 'StateAnalysis',
       inputType: 'logo',
+      size: 200,
+    },
+    {
+      displayText: t('Cohort'),
+      fieldName: 'Cohort',
+      inputType: 'list',
       size: 200,
     },
     {
@@ -187,6 +200,7 @@ function StudyList(props) {
             sortFieldName={sort.fieldName}
             sortDirection={sort.direction}
             studyListDateFilterNumDays={studyListDateFilterNumDays}
+            cohorts={cohorts}
           />
         </tr>
       </thead>
@@ -232,6 +246,7 @@ function StudyList(props) {
               AccessionNumber={study.AccessionNumber || ''}
               AccessAuth={study.UserHasAccess}
               StateAnalysis={study.StepsAnalysis}
+              Cohort={study.Cohort}
               modalities={study.modalities}
               PatientID={study.PatientID || ''}
               PatientName={study.PatientName || ''}
@@ -274,6 +289,7 @@ StudyList.propTypes = {
   onFilterChange: PropTypes.func.isRequired,
   studyListDateFilterNumDays: PropTypes.number,
   displaySize: PropTypes.string,
+  cohorts: PropTypes.object,
 };
 
 StudyList.defaultProps = {};
@@ -297,6 +313,7 @@ function TableRow(props) {
     isHighlighted,
     AccessAuth,
     StateAnalysis,
+    Cohort,
     modalities,
     PatientID,
     PatientName,
@@ -336,6 +353,13 @@ function TableRow(props) {
     stateanalysis = <div> </div>
   }
 
+
+  const cohort = (
+    <div>
+      {Cohort}
+    </div>
+  )
+
   const fctOnClick = (AccessAuth) => {
 
     if (AccessAuth  ) {
@@ -350,6 +374,7 @@ function TableRow(props) {
     >
       <td style={{ textAlign: 'center' }}>{authorized}</td>
       <td style={{ textAlign: 'center' }}>{stateanalysis}</td>
+      <td style={{ textAlign: 'center' }}>{cohort}</td>
       <td className={classNames({ 'empty-value': !PatientName })}>
         {PatientName || `(${t('Empty')})`}
       </td>
@@ -370,6 +395,7 @@ function TableRow(props) {
     >
       <td style={{ textAlign: 'center' }}>{authorized}</td>
       <td style={{ textAlign: 'center' }}>{stateanalysis}</td>
+      <td style={{ textAlign: 'center' }}>{cohort}</td>
       <td className={classNames({ 'empty-value': !PatientName })}>
         {PatientName || `(${t('Empty')})`}
         <div style={{ color: '#60656f' }}>{PatientID}</div>
@@ -436,6 +462,7 @@ function TableRow(props) {
         </div>
       </td>
       <td style={{ textAlign: 'center' }}>{stateanalysis}</td>
+      <td style={{ textAlign: 'center' }}>{cohort}</td>
       <td style={{ position: 'relative', overflow: 'hidden' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>

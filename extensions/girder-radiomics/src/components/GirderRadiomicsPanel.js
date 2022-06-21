@@ -225,6 +225,8 @@ export default class GirderRadiomicsPanel extends Component {
     if (response.status===200) {
         var FileSaver = require('file-saver');
         let filename = response.filename; //`test.dcm`
+
+        console.log(response.data)
         var blob = new Blob([response.data], { type: 'text/plain;charset=utf-8' });
         FileSaver.saveAs(blob, filename);
     }

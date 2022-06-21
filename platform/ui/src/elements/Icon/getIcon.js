@@ -133,6 +133,9 @@ import excel from './icons/excel.svg'
 import capture from './icons/capture.svg'
 import triangle from './icons/triangle.svg'
 
+import stack from './icons/stack.svg'
+
+
 const ICONS = {
   eye,
   'eye-closed': eyeClosed,
@@ -248,6 +251,7 @@ const ICONS = {
   "capture": capture,
   "select": select,
   "triangle": triangle,
+  "stack": stack,
 };
 
 /**

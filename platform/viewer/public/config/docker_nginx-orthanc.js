@@ -53,5 +53,5 @@ window.config = {
   },
   serversType: "PACS",
   authenticationRequired: true,
-  authenticationServer: 'http://localhost:8088/api/v1/',
+  authenticationServer: "http://localhost:8088/api/v1/",//'http://covid.creatis.insa-lyon.fr/awesomme-girder/api/v1/',
 };

@@ -7,7 +7,7 @@ export default class GirderClient {
 
   async info(params) {
 
-    let url = new URL('radiomicsOHIF', this.server_url);
+    let url = new URL('aimodulesOHIF/radiomics', this.server_url);
     return await GirderClient.api_get(url.toString(), params);
   }
 
@@ -18,7 +18,7 @@ export default class GirderClient {
   }
 
   async get_radiomics(params){
-    let url = new URL('radiomicsOHIF', this.server_url);
+    let url = new URL('aimodulesOHIF/radiomics', this.server_url);
     return await GirderClient.api_post(
       url.toString(),
       params,
@@ -35,7 +35,7 @@ export default class GirderClient {
   //   return await GirderClient.api_get(url.toString());
   // }
   async downloadItem(params) {
-    let url = new URL('radiomicsOHIF/download', this.server_url);
+    let url = new URL('aimodulesOHIF/radiomics/download', this.server_url);
     return await GirderClient.api_get(url.toString(params));
   }
 
