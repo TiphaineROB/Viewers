@@ -130,7 +130,7 @@ export default class GirderRadiomicsPanel extends Component {
     let log = '';//document.getElementById("login").value;
     let pwd = '';//document.getElementById("password").value;
     var params =  {
-      orthanc: 'http://localhost/proxy/dicom-web',
+      orthanc: window.config.dicomWebServer,//'http://covid.creatis.insa-lyon.fr/awesomme-orthanc/dicom-web',
       login: log,
       psswd: pwd,
       token: window.config.user.key,//CookieUtils.getCookie("AUTH_SERVER_KEY"),

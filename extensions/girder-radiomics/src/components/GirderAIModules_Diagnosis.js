@@ -155,12 +155,12 @@ export default class GirderDiagnosisPanel extends Component {
 
   onInfo = async () => {
     var params =  {
-      orthanc: 'http://localhost/proxy/dicom-web',
+      orthanc: window.config.dicomWebServer,//'http://covid.creatis.insa-lyon.fr/awesomme-orthanc/dicom-web',
       token: window.config.user.key,//CookieUtils.getCookie("AUTH_SERVER_KEY"),
       url: window.config.authenticationServer,
     }
 
-    const response = await this.client().info(params);
+    const response = await this.client().info(params);  
     const response2 = await this.client().infoDiagnosisPanel(params);
 
     if (response.status !== 200 || response.data.status !== 200 || response2.status !== 200 || response2.data.status !== 200) {
@@ -311,7 +311,7 @@ export default class GirderDiagnosisPanel extends Component {
     }
 
     var params =  {
-      dataSource: 'http://localhost/proxy/dicom-web',
+      dataSource: window.config.dicomWebServer,//'http://covid.creatis.insa-lyon.fr/awesomme-orthanc/dicom-web',
       token: window.config.user.key,
       patientUID: this.viewConstants.PatientID,
       studyInstanceUID: this.viewConstants.StudyInstanceUID,

@@ -87,7 +87,7 @@ export default class RadiomicsOptions extends BaseTab {
       console.log(settings)
 
       var params =  {
-        orthanc: 'http://localhost/proxy/dicom-web', // qu'il faut récupérer de la config ?
+        orthanc: window.config.dicomWebServer,//'http://covid.creatis.insa-lyon.fr/awesomme-orthanc/dicom-web', // qu'il faut récupérer de la config ?
         patientID: this.props.viewConstants.PatientID,
         studyID: this.props.viewConstants.StudyInstanceUID,  // a récupéré des composants
         serieImgID: this.props.viewConstants.SeriesInstanceUID,

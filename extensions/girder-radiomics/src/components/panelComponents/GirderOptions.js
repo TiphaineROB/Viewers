@@ -44,7 +44,9 @@ export default class GirderOptions extends Component {
 
   onInfo = async () => {
     // console.log(CookieUtils.getCookie("AUTH_SERVER_KEY"))
-    var params =  {orthanc: 'http://localhost/proxy/dicom-web', token: window.config.user.key, url: window.config.authenticationServer,}
+    var params =  {
+	    orthanc: window.config.dicomWebServer,//' http://covid.creatis.insa-lyon.fr/awesomme-orthanc/dicom-web', 
+	    token: window.config.user.key, url: window.config.authenticationServer,}
     const response = await this.props.client().info(params);
     if (response.status !== 200) {
       this.notification.show({
