@@ -1,5 +1,5 @@
 window.config = {
-  routerBasename: '/',
+  routerBasename: 'awesomme-ohif/',
   showStudyList: true,
   filterQueryParam: false,
   disableServersCache: false,
@@ -17,9 +17,9 @@ window.config = {
     dicomWeb: [
       {
         name: 'Orthanc',
-        wadoUriRoot: '/wado',
-        qidoRoot: '/dicom-web',
-        wadoRoot: '/dicom-web',
+        wadoUriRoot: '/awesomme-orthanc/wado',
+        qidoRoot: '/awesomme-orthanc/dicom-web',
+        wadoRoot: '/awesomme-orthanc/dicom-web',
         qidoSupportsIncludeField: false,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
@@ -53,5 +53,6 @@ window.config = {
   },
   serversType: "PACS",
   authenticationRequired: true,
-  authenticationServer: 'http://localhost:8088/api/v1/',
+  authenticationServer: "https://covid.creatis.insa-lyon.fr/awesomme-girder/api/v1/",//'http://covid.creatis.insa-lyon.fr/awesomme-girder/api/v1/',
+  dicomWebServer: "https://covid.creatis.insa-lyon.fr/awesomme-orthanc/dicom-web",
 };

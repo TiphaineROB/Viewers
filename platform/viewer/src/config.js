@@ -11,7 +11,7 @@ export function setConfiguration(appConfig) {
   if (process && process.env && process.env.PUBLIC_URL) {
     homepage = process.env.PUBLIC_URL;
   }
-
+  homepage = 'aweomme/';
   window.info = {
     version,
     homepage,

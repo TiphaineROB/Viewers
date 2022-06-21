@@ -397,7 +397,7 @@ async function getStudyList(
         const uri_params = {
           baseURL: window.config.authenticationServer,
           params: {
-            orthanc: 'http://localhost/proxy/dicom-web',
+            orthanc: window.config.dicomWebServer,//'http://localhost/proxy/dicom-web',
             token: window.config.user.key,
             url: window.config.authenticationServer
             }
@@ -417,13 +417,13 @@ async function getStudyList(
         const uri_params = {
           baseURL: window.config.authenticationServer,
           params: {
-            orthanc: 'http://localhost/proxy/dicom-web',
+            orthanc: window.config.dicomWebServer,//'http://localhost/proxy/dicom-web',
             token: window.config.user.key,
             url: window.config.authenticationServer
             }
         }
         const ax_rest = axios.create(uri_params);
-        let access = await ax_rest.get("/radiomicsOHIF", {})
+        let access = await ax_rest.get("aimodulesOHIF/radiomics", {})
               .then(
                 function(r) {
                     return r.data;

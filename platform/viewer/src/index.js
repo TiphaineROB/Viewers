@@ -85,30 +85,81 @@ function launchApp() {
 
 function startAuth() {
 
-  if (window.config.authenticationRequired===true) {
-    window.config.user = {};
-    window.config.user.key = '';
-    let url = new URL('authOhif', window.config.authenticationServer);
-    axios
-      .post(url, {})
-      .then(function(response) {
-        if (response.data.token==='') {
-          window.config.user.key = '';
-          console.log("Erreur, should render an error page")
-          launchError()
-          return response;
-        } else {
-          window.config.user.key = response.data.token;
-          launchApp()
-        }
-        return response;
-      })
-      .catch(function(error) {
-        launchError()
-        return error;
-      })
-      .finally(function() {});
+  window.config.user = {};
+  window.config.user.key = '';
 
+  if (window.config.authenticationRequired===true) {
+    const onclick = () => {
+      let url = new URL('authOhif', window.config.authenticationServer);
+      let params = new URLSearchParams(url.search);
+      // const params = {
+      //   username: document.getElementById("login").value,
+      //   password: document.getElementById("psswd").value,
+      // }
+      url.searchParams.append("username", document.getElementById("login").value)
+      url.searchParams.append("password", document.getElementById("psswd").value)
+      axios
+        .post(url, {}) //mode:'cors'
+        .then(function(response) {
+          if (response.data.token==='') {
+            window.config.user.key = '';
+            console.log("Erreur, should render an error page")
+            launchError()
+            return response;
+          } else {
+            window.config.user.key = response.data.token;
+            launchApp()
+          }
+          return response;
+        })
+        .catch(function(error) {
+          console.log(error)
+          launchError()
+          return error;
+        })
+        .finally(function() {});
+    }
+    const oncancel = () => {
+      launchError()
+    }
+    const onkey = (evt) => {
+      if (evt.key==="Enter") {
+      	onclick();
+      }
+    }
+    const auth = (
+      <div className="container">
+
+      	<h1 className="header">LOGIN</h1>
+
+      	<div className="instructions">
+          <div className="right-close">
+            <div onClick={oncancel}>
+              <FontAwesomeIcon icon="xmark"/>
+            </div>
+          </div>
+          <h2>Please enter your credentials to access this platform.</h2>
+
+
+          <div className="centered">
+            <form>
+               Username: &emsp;<input id="login" type="text" name="name" size="10"/>
+               &emsp;
+               Password: &emsp; <input id="psswd" type="password" onKeyPress={onkey} name="password" size="10"/>
+               <br/>
+            </form>
+          </div>
+          <p></p>
+          <div className="centered">
+            <button className="button-b" onClick={onclick} title={'enter'}>
+             Enter!
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+
+    ReactDOM.render(auth, document.querySelector("#root"));
   } else {
     launchApp()
   }

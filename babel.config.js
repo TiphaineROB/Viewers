@@ -4,7 +4,7 @@ const path = require('path');
 // https://babeljs.io/docs/en/options#babelrcroots
 module.exports = {
   babelrcRoots: ['./platform/*', './extensions/*'],
-  plugins: ['inline-react-svg', '@babel/plugin-proposal-class-properties'],
+  plugins: ['inline-react-svg', '@babel/plugin-proposal-class-properties'],//, '@babel/plugin-transform-class-properties', '@babel/plugin-syntax-class-properties'],
   env: {
     test: {
       presets: [

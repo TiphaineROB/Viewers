@@ -497,7 +497,7 @@ export default class AutoSegmentation extends Component {
       file,
     } = model;
     const params = {
-      dataSource: 'http://localhost/proxy/dicom-web',
+      dataSource: window.config.dicomWebServer, //'http://localhost/proxy/dicom-web',
       studyInstanceUID: StudyInstanceUID,
       sopClassUIDs: sopClassUIDs,
       seriesInstanceUID: SeriesInstanceUID,

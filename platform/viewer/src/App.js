@@ -125,7 +125,7 @@ class App extends Component {
       showStudyList: true,
       cornerstoneExtensionConfig: {},
       extensions: [],
-      routerBasename: '/',
+      routerBasename: '/awesomme/',
     };
 
     this._appConfig = {

@@ -1,6 +1,6 @@
 window.config = {
   // default: '/'
-  routerBasename: '/',
+  routerBasename: '/awesomme-orthanc',
   extensions: [],
   showStudyList: true,
   filterQueryParam: false,
@@ -9,9 +9,9 @@ window.config = {
     dicomWeb: [
       {
         name: 'Orthanc',
-        wadoUriRoot: 'http://localhost:8042/wado',
-        qidoRoot: 'http://localhost:8042/dicom-web',
-        wadoRoot: 'http://localhost:8042/dicom-web',
+        wadoUriRoot: 'https://covid.creatis.insa-lyon.fr/awesomme-orthanc/wado',
+        qidoRoot: 'https://covid.creatis.insa-lyon.fr/awesomme-orthanc/dicom-web',
+        wadoRoot: 'https://covid.creatis.insa-lyon.fr/awesomme-orthanc/dicom-web',
         qidoSupportsIncludeField: false,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
