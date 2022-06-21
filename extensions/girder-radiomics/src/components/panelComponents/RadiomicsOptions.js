@@ -143,12 +143,16 @@ export default class RadiomicsOptions extends BaseTab {
 
   getSettings = () => {
     console.log(document.getElementById("minimumROIDimensions"))
+    var selectROIDims = document.getElementById('minimumROIDimensions');
+    var selectInterpolator = document.getElementById('interpolator');
+
+
     return {
       normalize: document.getElementById("checkboxNormalize").checked,
       normalizeScale: document.getElementById("normalizeScale").value,
-      interpolator: document.getElementById("interpolator").value,
+      interpolator: selectInterpolator.options[selectInterpolator.selectedIndex].value,
       preCrop: document.getElementById("checkboxPreCrop").checked,
-      minimumROIDimensions: document.getElementById("minimumROIDimensions").value,
+      minimumROIDimensions:  selectROIDims.options[selectROIDims.selectedIndex].value,
       minimumROISize: document.getElementById("minimumROISize").value,
       correctMask: document.getElementById("checkboxCorrectMask").checked,
       binWidth: document.getElementById("binWidth").value,
@@ -201,7 +205,17 @@ export default class RadiomicsOptions extends BaseTab {
     this.current = this.currentSeg()!=null ?  this.currentSeg() : segments.length > 0 ? segments[0] : null;
 
     this.disabled = false;
-    this.checked = true; //this.state.checked ? this.state.checked : false;
+    this.checked = false; //this.state.checked ? this.state.checked : false;
+
+    this.minimumROIDimensionsOptions = [1, 2, 3]
+    this.interpolatorOptions = ["sitkNearestNeighbor", "sitkLinear", "sitkBSpline",
+        "sitkGaussian", "sitkLabelGaussian", "sitkHammingWindowedSinc",
+        "sitkCosineWindowedSinc", "sitkWelchWindowedSinc", "sitkLanczosWindowedSinc",
+        "sitkBlackmanWindowedSinc"
+    ]
+
+    this.minimumROIDimensionsSelected=2;
+    this.interpolatorSelected="sitkBSpline";
 
     console.log(this.checked)
     //window.location.reload(false);
@@ -271,14 +285,21 @@ export default class RadiomicsOptions extends BaseTab {
                   <label htmlFor="minimumROIDimensions" className="form-label" style={{display: "inline-block"}}>
                     ROI Dim &emsp;&ensp;&nbsp;
                   </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="minimumROIDimensions"
-                    id="minimumROIDimensions"
-                    style={{size: 4, display: "inline-block"}}
-                    disabled={this.disabled}
-                  />
+                  <select id="minimumROIDimensions" className="form-select">
+                    {
+                      this.minimumROIDimensionsOptions.map( (val, index) => {
+                          let elem = (
+                            <option value={val}>{val}</option>
+                          )
+                          if (val==this.minimumROIDimensionsSelected) {
+                            elem = (
+                              <option value={val} selected>{val}</option>
+                            )
+                          }
+                          return elem;
+                      })
+                    }
+                  </select>
                 </td>
                 <td width="50%" style={{display: "inline-block"}}>
                   <label htmlFor="minimumROISize" className="form-label" style={{display: "inline-block"}}>
@@ -286,7 +307,7 @@ export default class RadiomicsOptions extends BaseTab {
                   </label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control-rad"
                     name="minimumROISize"
                     id="minimumROISize"
                     style={{size: 4, display: "inline-block"}}
@@ -330,7 +351,7 @@ export default class RadiomicsOptions extends BaseTab {
                   </label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control-rad"
                     name="normalizeScale"
                     id="normalizeScale"
                     style={{size: 4, display: "inline-block"}}
@@ -339,20 +360,28 @@ export default class RadiomicsOptions extends BaseTab {
                 </td>
               </tr>
               <tr>
-                <td width="50%" style={{display: "inline-block"}}>
-                  <label htmlFor="interpolation" className="form-label" style={{display: "inline-block"}}>
-                   Interpolation
+                <td width="90%" style={{display: "inline-block"}}>
+                  <label htmlFor="interpolator" className="form-label" style={{display: "inline-block"}}>
+                   Interpolator
                   </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="interpolator"
-                    id="interpolator"
-                    style={{size: 4, display: "inline-block"}}
-                    disabled={this.disabled}
-                  />
+                  <select id="interpolator" className="form-select">
+                    {
+                      this.interpolatorOptions.map( (val, index) => {
+                        console.log(index, val)
+                          let elem = (
+                            <option value={val}>{val}</option>
+                          )
+                          if (val==this.interpolatorSelected) {
+                            elem = (
+                              <option value={val} selected>{val}</option>
+                            )
+                          }
+                          return elem;
+                      })
+                    }
+                  </select>
                 </td>
-                <td width="50%" style={{display: "inline-block"}}>
+                <td width="10%" style={{display: "inline-block"}}>
                 </td>
               </tr>
               <tr>
@@ -425,7 +454,7 @@ export default class RadiomicsOptions extends BaseTab {
                     </label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control-rad"
                       name="binCount"
                       id="binCount"
                       style={{size: 2, display: "inline-block"}}
@@ -438,7 +467,7 @@ export default class RadiomicsOptions extends BaseTab {
                   </label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control-rad"
                     name="binWidth"
                     id="binWidth"
                     style={{size: 4, display: "inline-block"}}
@@ -485,7 +514,7 @@ export default class RadiomicsOptions extends BaseTab {
                   </label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control-rad"
                     name="kernelRadius"
                     id="kernelRadius"
                     style={{size: 4, display: "inline-block"}}
@@ -503,6 +532,11 @@ export default class RadiomicsOptions extends BaseTab {
   }
 }
 
+
+// <option value="1">1</option>
+// <option value="2" selected>2</option>
+// <option value="3">3</option>
+
 //
 // <label htmlFor="normalize" className="form-label" style={{display: "inline-block"}}>
 //   Normalize &ensp;&nbsp;
@@ -510,7 +544,7 @@ export default class RadiomicsOptions extends BaseTab {
 
 // <input
 //   type="text"
-//   className="form-control"
+//   className="form-control-rad"
 //   name="normalize"
 //   id="normalize"
 //   value="True"
