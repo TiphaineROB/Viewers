@@ -174,7 +174,7 @@ export function createSegDisplaySet(dataset, dicomBuffer) {
     dataset,
   };
 
-  console.log("SegDisplaySet", segDisplaySet)
+  // console.log("SegDisplaySet", segDisplaySet)
   segDisplaySet.getSourceDisplaySet = function(studies, activateLabelMap = true, onDisplaySetLoadFailureHandler) {
     return getSourceDisplaySet(studies, segDisplaySet, activateLabelMap, onDisplaySetLoadFailureHandler);
   };

@@ -373,7 +373,7 @@ function _getVisibleToolbarButtons() {
     });
 
   });
-  console.log(toolbarButtonDefinitions)
+  // console.log(toolbarButtonDefinitions)
   return toolbarButtonDefinitions;
 }
 

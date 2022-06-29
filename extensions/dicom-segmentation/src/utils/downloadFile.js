@@ -76,6 +76,12 @@ export default function downloadFile(
       });
     }
   }, function(err){
+    notification.show({
+      title: 'Downloading segments',
+      message: 'Could not download segments, make sure its uploaded on the server first',
+      type: 'error',
+      duration: 2000,
+    });
     console.log(err)
   });
 }

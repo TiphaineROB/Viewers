@@ -51,7 +51,20 @@ export default function init({ servicesManager, configuration = {} }) {
   });
 
   csTools.addTool(DICOMSegTempCrosshairsTool);
-  csTools.addTool(CustomTool);
+  // csTools.addTool(CustomTool);
+  csTools.setToolDisabled("Brush")
+  csTools.setToolDisabled("SphericalBrush")
+  csTools.setToolDisabled("CorrectionScissors")
+  csTools.setToolDisabled("CircleScissors")
+  csTools.setToolDisabled("FreehandScissors")
+  csTools.setToolDisabled("RectangleScissors")
+  csTools.setToolDisabled("CircleScissorsEraser")
+  csTools.setToolDisabled("RectangleScissorsEraser")
+  csTools.setToolDisabled("FreehandScissorsEraser")
+  csTools.setToolDisabled("DICOMSegTempCrosshairsTool")
+
+
+
   //csTools.setToolEnabled()
   // csTools.setToolActive('CustomTool', {isMouseActive: true});
   // csTools.addTool(CustomBrush);

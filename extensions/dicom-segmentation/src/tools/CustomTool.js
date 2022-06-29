@@ -226,6 +226,7 @@ export default class CustomTool extends BaseBrushTool {
               .then(async image => {
 
                 await cornerstone.displayImage(element, image)
+                event.preventDefault()
                 const newElement = cornerstone.getEnabledElementsByImageId(image.imageId)[0]
 
                 // setters.labelmap3DForElement(
@@ -260,6 +261,8 @@ export default class CustomTool extends BaseBrushTool {
                   columns,
                   this._configuration.radius,
                 )
+
+
                 //console.log("After computeInterpolation : ", labelmap2DofImageIdIndex.pixelData.includes(initLabelmap3D.activeSegmentIndex)) // =>> OK
                 // const labelmap2DofImageIdIndex2 = getters.labelmap2DByImageIdIndex(
                 //   initLabelmap3D,
@@ -490,8 +493,8 @@ function computeInterpolation(
 
 
   const mat = cv.matFromArray(columns, rows, cv.CV_8UC1, prevSegPixelData);
-  const matPixels = cv.matFromArray(columns, rows, cv.CV_64F, prevPixelData);
-  const matPixelsNew = cv.matFromArray(columns, rows, cv.CV_64F, prevPixelData);
+  const matPixels = cv.matFromArray(columns, rows, cv.CV_8UC1, prevPixelData);
+  const matPixelsNew = cv.matFromArray(columns, rows, cv.CV_8UC1, newPixelData);
 
   // Center SEG
   const ctrsMoments = cv.moments(mat)
@@ -506,11 +509,16 @@ function computeInterpolation(
   // Get contours for segmentation - and outside contours
   var contours = new cv.MatVector();
   const hierarchy = new cv.Mat;
-  const points = {}
+  var contoursPrevData = new cv.MatVector(), hierarchyPrevData = new cv.Mat;
+  var contoursNewData = new cv.MatVector(), hierarchyNewData = new cv.Mat;
+
+  const points = [];
   var outsideCtrs = [];
   var outsideVals = [];
+  var contoursVals = [];
+  var contoursIdx = [];
 
-  cv.findContours(mat, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+  cv.findContours(mat, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
 
   for (let i = 0; i < contours.size(); ++i) {
      const ci = contours.get(i)
@@ -521,29 +529,48 @@ function computeInterpolation(
        p.y = ci.data32S[j+1]
        points[i].push(p)
 
+
        const spIndex = getPixelIndex(p.x, p.y);
-       for (var xrad=0; xrad<=radius; xrad++){
-         for (var yrad=0; yrad<=radius; yrad++){
+       for (var xrad=1; xrad<=radius; xrad++){
+         for (var yrad=1; yrad<=radius; yrad++){
            var testIdx = getPixelIndex(p.x+xrad, p.y+yrad)
            var  found = indexes.some( idx => testIdx===idx)
-           if ( found ){
-             console.log("Is this always false ?")
+           if ( found === false ){
+             // console.log("Is this always false ?")
              outsideCtrs.push([p.x+xrad, p.y+yrad])
              outsideVals.push(prevPixelData[testIdx])
            }
            testIdx = getPixelIndex(p.x-xrad, p.y-yrad)
            found = indexes.some( idx => testIdx===idx)
-           if ( indexes.includes(testIdx)===false){
-             console.log("Is this always false ?")
+           if ( found ===false ){
+             // console.log("Is this always false ?")
              outsideCtrs.push([p.x+xrad, p.y+yrad])
              outsideVals.push(prevPixelData[testIdx])
            }
          }
        }
+       testIdx = getPixelIndex(p.x, p.y)
+       contoursVals.push(prevPixelData[testIdx])
+       contoursIdx.push(testIdx)
+       // newSegPixelData[testIdx] = segmentIndex;
      }
    }
 
    console.log("Contours computed")
+   console.log(Math.min(...prevPixelData), Math.max(...prevPixelData))
+   // cv.cvtColor(matPixels, matPixels, cv.COLOR_RGBA2GRAY, 0);
+   // cv.cvtColor(matPixelsNew, matPixelsNew, cv.COLOR_RGBA2GRAY, 0);
+   cv.threshold(matPixels, matPixels, 150, 200, cv.THRESH_BINARY);
+   cv.threshold(matPixelsNew, matPixelsNew, 150, 200, cv.THRESH_BINARY);
+
+   cv.findContours(matPixels, contoursPrevData, hierarchyPrevData, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE);
+   cv.findContours(matPixelsNew, contoursNewData, hierarchyNewData, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE);
+
+
+
+   // var blob = new Blob([dst.data64F], { type: 'image/png' });
+   // FileSaver.saveAs(blob, filename);
+
    // We have here : outsideCtrs/Vals, contours points contours seg, indexes
 
    // Params Sobel
@@ -554,6 +581,7 @@ function computeInterpolation(
 
    const matInsideVals = cv.matFromArray(columns, rows, cv.CV_64F, insideVals);
    const matOutsideVals = cv.matFromArray(columns, rows, cv.CV_64F, outsideVals);
+   const matCtrs = cv.matFromArray(columns, rows, cv.CV_64F, contoursVals);
 
    cv.Sobel(matInsideVals, sobelX, cv.CV_64F, degreeX, 0, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
    cv.Sobel(matInsideVals, sobelY, cv.CV_64F, 0, degreeY, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
@@ -563,24 +591,55 @@ function computeInterpolation(
    cv.Sobel(matOutsideVals, sobelY, cv.CV_64F, 0, degreeY, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
    const gradientsOutX = sobelX.data64F, gradientsOutY = sobelY.data64F;
 
+
+   cv.Sobel(matCtrs, sobelX, cv.CV_64F, degreeX, 0, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
+   cv.Sobel(matCtrs, sobelY, cv.CV_64F, 0, degreeY, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
+   const gradientsCtrX = sobelX.data64F, gradientsCtrY = sobelY.data64F;
+
+   cv.Sobel(matPixelsNew, sobelX, cv.CV_64F, degreeX, 0, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
+   cv.Sobel(matPixelsNew, sobelY, cv.CV_64F, 0, degreeY, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
+   const gradientsNewX = sobelX.data64F, gradientsNewY = sobelY.data64F;
+
+   cv.Sobel(matPixels, sobelX, cv.CV_64F, degreeX, 0, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
+   cv.Sobel(matPixels, sobelY, cv.CV_64F, 0, degreeY, sizeKernel, scale, delta, cv.BORDER_DEFAULT);
+   const gradientsX = sobelX.data64F, gradientsY = sobelY.data64F;
+
+
    console.log("Sobel computed")
 
-   var insideMagnitudes = [], outsideMagnitudes = [];
-   var insideOrientations = [], outsideOrientations = [];
+   var insideMagnitudes = [], outsideMagnitudes = [], contoursMagnitudes = [], newMagnitudes=[];
+   var insideOrientations = [], outsideOrientations = [], contoursOrientations = [], newOrientations=[];
 
-   insideVals.forEach( (val, index) => {
-     var mag = Math.sqrt ( Math.pow(gradientsSegX[index], 2) + Math.pow(gradientsSegY[index], 2) )
+   indexes.forEach( (index, idx) => {
+     var mag = Math.sqrt ( Math.pow(gradientsX[index], 2) + Math.pow(gradientsY[index], 2) )
      insideMagnitudes.push(mag)
-     var artan = Math.atan2(gradientsSegX[index], gradientsSegY[index])
+     var artan = Math.atan2(gradientsX[index], gradientsY[index])
      insideOrientations.push(artan*(180 / Math.PI) % 180)
    })
 
-   outsideVals.forEach( (val, index) => {
-     var mag = Math.sqrt ( Math.pow(gradientsOutX[index], 2) + Math.pow(gradientsOutY[index], 2) )
+   outsideCtrs.forEach( (val, idx) => {
+     var index = getPixelIndex(val[0], val[1])
+     var mag = Math.sqrt ( Math.pow(gradientsX[index], 2) + Math.pow(gradientsY[index], 2) )
      outsideMagnitudes.push(mag)
-     var artan = Math.atan2(gradientsOutX[index], gradientsOutY[index])
+     var artan = Math.atan2(gradientsX[index], gradientsY[index])
      outsideOrientations.push(artan*(180 / Math.PI) % 180)
    })
+
+   contoursIdx.forEach( (index, idx) => {
+     var mag = Math.sqrt ( Math.pow(gradientsX[index], 2) + Math.pow(gradientsY[index], 2) )
+     console.log(gradientsX[index], gradientsY[index], mag)
+     contoursMagnitudes.push(mag)
+     var artan = Math.atan2(gradientsX[index], gradientsY[index])
+     contoursOrientations.push(artan*(180 / Math.PI) % 180)
+   })
+
+   newPixelData.forEach( (val, index) => {
+     var mag = Math.sqrt ( Math.pow(gradientsNewX[index], 2) + Math.pow(gradientsNewY[index], 2) )
+     newMagnitudes.push(mag)
+     var artan = Math.atan2(gradientsNewX[index], gradientsNewY[index])
+     newOrientations.push(artan*(180 / Math.PI) % 180)
+   })
+
 
    console.log("---- Info Inside Segmentation")
    console.log("Size seg : ", insideVals.length)
@@ -594,13 +653,168 @@ function computeInterpolation(
    console.log("Magnitudes average : ", computeAverage(outsideMagnitudes))
    console.log("Magnitude Min : ", Math.min(...outsideMagnitudes), " Max: ", Math.max(...outsideMagnitudes))
 
+   console.log("---- Info Contours Segmentation")
+   console.log("Size : ",  contoursVals.length)
+   console.log("Average : ", computeAverage(contoursVals), " Min : ", Math.min(...contoursVals), " Max: ", Math.max(...contoursVals))
+   console.log("Magnitudes average : ", computeAverage(contoursMagnitudes))
+   console.log("Magnitude Min : ", Math.min(...contoursMagnitudes), " Max: ", Math.max(...contoursMagnitudes))
 
-   // outsideCtrs.forEach( ())
+
+   console.log("Seuillage par orientations ?")
+   console.log(contoursMagnitudes)
+   var magOrientations = {}
+   magOrientations["0-45"] = { tab: []}
+   magOrientations["45-90"] = { tab: []}
+   magOrientations["90-135"] = { tab: []}
+   magOrientations["135-180"] = { tab: []}
+   magOrientations["-45-0"] = { tab: []}
+   magOrientations["-90-45"] = { tab: []}
+   magOrientations["-135-90"] = { tab: []}
+   magOrientations["-180-135"] = { tab: []}
+
+   contoursOrientations.forEach( (or, idx) => {
+     if ( -180 <= or  && or < -135 ) {
+       magOrientations["-180-135"].tab.push(contoursMagnitudes[idx])
+     } else if ( -135 <= or  && or < -90 ) {
+       magOrientations["-135-90"].tab.push(contoursMagnitudes[idx])
+     } else if ( -90 <= or  && or < -45 ) {
+       magOrientations["-90-45"].tab.push(contoursMagnitudes[idx])
+     } else if ( -45 <= or  && or < 0 ) {
+       magOrientations["-45-0"].tab.push(contoursMagnitudes[idx])
+     } else if ( 0 <= or  && or < 45 ) {
+       magOrientations["0-45"].tab.push(contoursMagnitudes[idx])
+     } else if ( 45 <= or  && or < 90 ) {
+       magOrientations["45-90"].tab.push(contoursMagnitudes[idx])
+     } else if ( 90 <= or  && or < 135 ) {
+       magOrientations["90-135"].tab.push(contoursMagnitudes[idx])
+     } else if ( 135 <= or  && or <= 180 ) {
+       magOrientations["135-180"].tab.push(contoursMagnitudes[idx])
+     }
+   })
+
+   magOrientations["0-45"].avg = computeAverage(magOrientations["0-45"].tab)
+   magOrientations["45-90"].avg = computeAverage(magOrientations["45-90"].tab)
+   magOrientations["90-135"].avg = computeAverage(magOrientations["90-135"].tab)
+   magOrientations["135-180"].avg = computeAverage(magOrientations["135-180"].tab)
+   magOrientations["-45-0"].avg = computeAverage(magOrientations["-45-0"].tab)
+   magOrientations["-90-45"].avg = computeAverage(magOrientations["-90-45"].tab)
+   magOrientations["-135-90"].avg = computeAverage(magOrientations["-135-90"].tab)
+   magOrientations["-180-135"].avg = computeAverage(magOrientations["-180-135"].tab)
+
+   console.log(magOrientations)
+
+
+   let dst = cv.Mat.zeros(columns, rows, cv.CV_8UC1);
+   let color = new cv.Scalar(255,0,0,255);
+   let todrawCtrs = [];
+   let todrawHier = [];
+   var sizeci = 0;
+   for (let i = 0; i < contoursNewData.size(); ++i) {
+      const ci = contoursNewData.get(i)
+
+      sizeci += ci.data32S.length;
+      // console.log(sizeci, hierarchyNewData.data8S[i*hierarchyNewData.step[1]])
+
+      if (ci.data32S.length > 30) {
+
+
+        cv.drawContours(dst, contoursNewData, i, color, 1, cv.LINE_AA, hierarchyNewData, 100);
+
+        dst.data8S.forEach( (val, idx) => {
+
+          let [ptx, pty] = getPixelCoord(idx);
+          var distance = Math.sqrt((ptx - cx)**2 + (pty - cy)**2)
+
+          var or = newOrientations[idx];
+
+          let averageOr;
+
+          if ( -180 <= or  && or < -135 ) {
+            averageOr = magOrientations["-180-135"].avg
+          } else if ( -135 <= or  && or < -90 ) {
+            averageOr = magOrientations["-135-90"].avg
+          } else if ( -90 <= or  && or < -45 ) {
+            averageOr = magOrientations["-90-45"].avg
+          } else if ( -45 <= or  && or < 0 ) {
+            averageOr = magOrientations["-45-0"].avg
+          } else if ( 0 <= or  && or < 45 ) {
+            averageOr = magOrientations["0-45"].avg
+          } else if ( 45 <= or  && or < 90 ) {
+            averageOr = magOrientations["45-90"].avg
+          } else if ( 90 <= or  && or < 135 ) {
+            averageOr = magOrientations["90-135"].avg
+          } else if ( 135 <= or  && or <= 180 ) {
+            averageOr = magOrientations["135-180"].avg
+          }
+          let threshold = 50;
+
+          var thresholdResult = newMagnitudes[idx] > averageOr-threshold && newMagnitudes[idx] < averageOr +threshold && distance < 50 ? segmentIndex : 0;
+
+          if (thresholdResult) {
+            todrawCtrs.push([ptx, pty])
+            //todrawCtrs.push(pty)
+            todrawHier.push(0)
+          }
+          // newSegPixelData[idx] = val!=0 && thresholdResult ? segmentIndex : 0;
+        })
+      }
+    }
+
+    todrawCtrs.forEach( (point) => {
+      const pointerArray = getCircle(radius, rows, columns, point[0], point[1]);
+
+      // Draw / Erase the active color.
+      drawBrushPixels(
+        pointerArray,
+        newSegPixelData,
+        segmentIndex,
+        columns,
+        false
+      );
+    })
+    //
+
+
+    // var test = const mat = cv.matFromArray(columns, rows, cv.CV_8UC1, prevSegPixelData);
+
+    //console.log(contoursNewData.get(0), hierarchyNewData)
+
+    // console.log(todrawCtrs)
+    // todrawCtrs.push(todrawCtrs[0])
+    // todrawCtrs.push(todrawCtrs[1])
+    //
+    // todrawHier.push(0)
+    // console.log("Test ?")
+    // var test = cv.matFromArray(1, todrawCtrs.length , cv.CV_32S, todrawCtrs);
+    // var test2 = cv.matFromArray(1, 1, cv.CV_8UC1, todrawHier);
+    // console.log(test)
+    // var testVec = new cv.MatVector()
+    // testVec.push_back(test)
+    // console.log(testVec.size())
+    //
+    //
+    //
+    //
+    // cv.drawContours(dst, testVec, 0, color, 1, cv.FILLED, test2, 0);
+    // console.log(dst.data8S.length, dst.data8S)
+    // testVec.delete()
+    // test.delete()
+
 
    // Remove all opencv mat
    mat.delete()
    matPixels.delete()
    matPixelsNew.delete()
+   matInsideVals.delete()
+   matOutsideVals.delete()
+   matCtrs.delete()
+   sobelX.delete()
+   sobelY.delete()
    contours.delete()
    hierarchy.delete()
+   contoursPrevData.delete()
+   hierarchyPrevData.delete()
+   contoursNewData.delete()
+   hierarchyNewData.delete()
+   dst.delete()
 }
