@@ -133,7 +133,7 @@ import excel from './icons/excel.svg'
 import capture from './icons/capture.svg'
 import triangle from './icons/triangle.svg'
 
-import stack from './icons/stack.svg'
+//import stack from './icons/stack.svg'
 
 
 const ICONS = {
@@ -251,7 +251,7 @@ const ICONS = {
   "capture": capture,
   "select": select,
   "triangle": triangle,
-  "stack": stack,
+  //"stack": stack,
 };
 
 /**

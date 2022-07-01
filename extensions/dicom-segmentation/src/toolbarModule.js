@@ -83,6 +83,22 @@ const definitions = [
         commandOptions: { toolName: 'CorrectionScissors' },
       },
       {
+        id: 'CustomTool',
+        label: 'Custom Tool (WIP)',
+        icon: 'link-circles',
+        type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+        commandName: 'setToolActive',
+        commandOptions: { toolName: 'CustomTool' },
+      },
+      // {
+      //   id: 'CustomBrush',
+      //   label: 'Custom Brush (WIP)',
+      //   icon: 'link-circles',
+      //   type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+      //   commandName: 'setToolActive',
+      //   commandOptions: { toolName: 'CustomBrush' },
+      // },
+      {
         id: 'BrushEraser',
         label: 'Eraser',
         icon: 'trash',
