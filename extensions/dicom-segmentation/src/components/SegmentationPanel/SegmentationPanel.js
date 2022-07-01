@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import cornerstoneTools from 'cornerstone-tools';
+import cornerstoneTools, {
+  importInternal,
+  getToolState,
+  toolColors,
+  getModule,
+  globalImageIdSpecificToolStateManager,
+  util,
+} from 'cornerstone-tools';
+const { setters, getters, state } = getModule('segmentation');
 import cornerstone from 'cornerstone-core';
 import moment from 'moment';
 import classNames from 'classnames';
@@ -28,6 +36,7 @@ import {
 } from '../../utils/mockMetadataTools';
 
 import SegmentationCustom from '../../utils/customGenerateToolState.js';
+import interpolationTool from '../../utils/interpolationTool.js';
 
 import {
   BrushColorSelector,
@@ -611,11 +620,7 @@ const SegmentationPanel = ({
 
   const getBrushStackState = () => {
     const module = cornerstoneTools.getModule('segmentation');
-    console.log(module)
     const firstImageId = getFirstImageId();
-
-
-
     const brushStackState = module.state.series[firstImageId];
     return brushStackState;
   };
@@ -709,7 +714,7 @@ const SegmentationPanel = ({
       const imageIds = stackToolState.data[0].imageIds;
 
 
-      console.log("Segmentation panel", imageIds)
+      // console.log("Segmentation panel", imageIds)
 
       let imagePromises = [];
       for (let i = 0; i < imageIds.length; i++) {
@@ -783,12 +788,10 @@ const SegmentationPanel = ({
       studies[0].derivedDisplaySets.push(segDisplaySet)
       studies[0].displaySets.push(segDisplaySet)
 
-
-      console.log(activeViewport, viewports[activeIndex])
-      console.log(studies)
-      console.log(segDisplaySet)
-
-      console.log("before setActiveLabelMap")
+      // console.log(activeViewport, viewports[activeIndex])
+      // console.log(studies)
+      // console.log(segDisplaySet)
+      // console.log("before setActiveLabelMap")
 
 
       const results = await setActiveLabelmap(
@@ -800,7 +803,7 @@ const SegmentationPanel = ({
       );
       setActiveSegment(1)
 
-      console.log("After setActiveLabelMap")
+      // console.log("After setActiveLabelMap")
 
       const t1 = performance.now();
       console.log(`Decode SEG and load to cornerstone: ${t1-t0}`)
@@ -836,6 +839,11 @@ const SegmentationPanel = ({
     try {
       activeLabelMaps3D = getActiveLabelMaps3D();
       currentSegment = selectedSegmentationOption;
+
+      // console.log(activeLabelMaps3D)
+
+      // console.log(currentSegment)
+
       if (!activeLabelMaps3D || currentSegment === undefined){
         notification.show({
           title: 'Upload Segment',
@@ -878,7 +886,7 @@ const SegmentationPanel = ({
       catch (err){
         console.log(err)
         if (err.message === "request failed"){
-          console.log("Current Segment", currentSegment)
+          // console.log("Current Segment", currentSegment)
           await uploadNewSegment(dicomWeb,  getCurrentDisplaySet(), currentSegment, activeLabelMaps3D, callbackUpload);
           }
       }
@@ -926,7 +934,7 @@ const SegmentationPanel = ({
 
     const callbackNewSegment = (dicomDerived) => {
       const labelMapsList = getLabelMapList();
-      console.log("callbacknewsegment")
+      // console.log("callbacknewsegment")
       let upload=false;
       callbackSegmentations(dicomDerived, upload);
       notification.show({
@@ -965,9 +973,139 @@ const SegmentationPanel = ({
     }
   };
 
+  const callInterpolationTool = async () => {
+    console.log("Inter-slices interpolation segmentation tool")
+    const currentDisplaySet = getCurrentDisplaySet();
+    // console.log("CurrentDisplaySet : ", currentDisplaySet)
+
+    if ( ! getBrushStackState()) {
+      notification.show({
+        title: 'Inter-slice interpolation',
+        message: "At least two slices should be segmented",
+        type: 'warning',
+        duration: 2000,
+      });
+      return;
+    }
+    var activeLabelMaps3D = getActiveLabelMaps3D();
+
+    console.log(activeLabelMaps3D)
+
+    var notEmpty = activeLabelMaps3D.labelmaps2D.filter( obj => Object.keys(obj).length !== 0).length;
+    if (notEmpty < 2) {
+      notification.show({
+        title: 'Inter-slice interpolation',
+        message: "At least two slices should be segmented",
+        type: 'warning',
+        duration: 2000,
+      });
+      return;
+    }
+
+    var firstSeg = {}, secondSeg = {}, firstIdx = 0, secondIdx = 0;
+    var countInter = 0, nbInter = notEmpty-1;
+
+    var toInterpolate = []
+
+
+    var enabledElement = cornerstone.getEnabledElements()[0];
+    var element = enabledElement.element;
+
+  //  var labelmap3D = getters.labelmap3D(element);
+
+    const { rows, columns } = enabledElement.image;
+
+    const config = {
+      url: window.config.servers.dicomWeb[0].qidoRoot,
+      headers: DICOMWeb.getAuthorizationHeader(),
+    };
+
+    var enabledImageId = cornerstone.getImage(element).imageId
+
+    enabledImageId = enabledImageId.substring(
+      enabledImageId.indexOf(config.url) + config.url.length
+    );
+    var splitImageId = enabledImageId.split('/');
+    const enabledStudyInstanceUID = splitImageId[2];
+    const enabledSeriesInstanceUID = splitImageId[4];
+    const enabledInstanceUID = splitImageId[6]
+
+    const dicomWeb = new api.DICOMwebClient(config);
+    var enabledSeries = await dicomWeb.retrieveSeriesMetadata({
+        studyInstanceUID: enabledStudyInstanceUID,
+        seriesInstanceUID: enabledSeriesInstanceUID,
+    })
+
+    const enabledSeriesMeta = await dicomWeb.retrieveSeriesMetadata({
+      studyInstanceUID: enabledStudyInstanceUID,
+      seriesInstanceUID: enabledSeriesInstanceUID,
+    })
+
+    await activeLabelMaps3D.labelmaps2D.forEach( async (obj, idx) => {
+        let firstSliceEmpty = Object.keys(firstSeg).length === 0
+        if (firstSliceEmpty) {
+          firstSeg = obj
+          firstIdx = idx
+        } else {
+          let secondSliceEmpty = Object.keys(secondSeg).length === 0
+          if (secondSliceEmpty) {
+            secondIdx = idx;
+            secondSeg = obj;
+
+          } else {
+            firstSeg = secondSeg;
+            firstIdx = secondIdx;
+            secondSeg = obj;
+            secondIdx = idx;
+
+          }
+
+          await interpolationTool(
+              element,
+              activeLabelMaps3D,
+              enabledSeries,
+              firstIdx, firstSeg,
+              secondIdx, secondSeg,
+              nbInter, countInter
+          )
+
+        }
+    })
+    if (activeLabelMaps3D.metadata.length === 0) {
+
+        const callbackNewSegment = (dicomDerived) => {
+          const labelMapsList = getLabelMapList();
+          let upload=false;
+          callbackSegmentations(dicomDerived, upload);
+          notification.show({
+            title: 'Create Segments',
+            message: "Ready to be modified, don't forget to save",
+            type: 'success',
+            duration: 9000,
+          });
+        }
+
+        newSegment(
+          enabledSeries,
+          currentDisplaySet,
+          enabledSeriesMeta,
+          callbackNewSegment,
+          true,
+          activeLabelMaps3D,
+        )
+      }
+      // else {
+      //   console.log("Refresh segmentation ?")
+      //
+      //   refreshSegmentations()
+      //   refreshViewports()
+      // }
+
+  };
+
   const inputRef = useRef(null);
 
-  console.log("Segmentation panel viewports: ", viewports)
+  // console.log("Segmentation panel viewports: ", viewports)
   // const autoSegmentationComponent = AutoSegmentation(activeIndex, viewports, getCurrentDisplaySet(), callbackSegmentations)
   // console.log(autoSegmentationComponent)
 
@@ -1019,6 +1157,15 @@ const SegmentationPanel = ({
           />
         </div>
 
+        <p style={{ fontSize: 'smaller' }}>
+            Complementary tools
+        </p>
+        <button onClick={callInterpolationTool} className="ui-btn-hover-c" title='Save Changes on server'>
+            &nbsp;
+            <Icon name="brush" width="12px" height="12px"/>
+            &nbsp;&nbsp;&nbsp; Inter-slices interpolation tool &nbsp;&nbsp;
+        </button>
+
         <br style={{ margin: '3px' }} />
 
         <div className="SegmentsSection">
@@ -1058,6 +1205,8 @@ const SegmentationPanel = ({
               </tbody>
             </table>
 
+
+
             <p style={{ fontSize: 'smaller' }}>
                 Synchronize server and download locally segments.
             </p>
@@ -1072,6 +1221,7 @@ const SegmentationPanel = ({
                 <Icon name="angle-double-down" width="12px" height="12px" />
                 &nbsp; Download segment locally &nbsp;
             </button>
+            <br/>
         </div>
 
         <SegmentsSection

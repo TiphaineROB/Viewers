@@ -1,6 +1,7 @@
 const TOOLBAR_BUTTON_TYPES = {
   COMMAND: 'command',
   SET_TOOL_ACTIVE: 'setToolActive',
+  SET_TOOL_DISABLED: 'setToolDisabled',
   BUILT_IN: 'builtIn',
 };
 
@@ -82,21 +83,13 @@ const definitions = [
         commandName: 'setToolActive',
         commandOptions: { toolName: 'CorrectionScissors' },
       },
-      {
-        id: 'CustomTool',
-        label: 'Custom Tool (WIP)',
-        icon: 'link-circles',
-        type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
-        commandName: 'setToolActive',
-        commandOptions: { toolName: 'CustomTool' },
-      },
       // {
-      //   id: 'CustomBrush',
-      //   label: 'Custom Brush (WIP)',
+      //   id: 'CustomTool',
+      //   label: 'Custom Tool (WIP)',
       //   icon: 'link-circles',
       //   type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
       //   commandName: 'setToolActive',
-      //   commandOptions: { toolName: 'CustomBrush' },
+      //   commandOptions: { toolName: 'CustomTool' },
       // },
       {
         id: 'BrushEraser',

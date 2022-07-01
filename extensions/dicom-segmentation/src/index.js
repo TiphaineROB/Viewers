@@ -5,6 +5,8 @@ import getSopClassHandlerModule from './getOHIFDicomSegSopClassHandler.js';
 import SegmentationPanel from './components/SegmentationPanel/SegmentationPanel.js';
 import { version } from '../package.json';
 
+import csTools from 'cornerstone-tools';
+
 export default {
   /**
    * Only required property. Should be a unique value across all extensions.
@@ -90,6 +92,7 @@ export default {
               return true;
             }
 
+
             for (let i = 0; i < studies.length; i++) {
               const study = studies[i];
 
@@ -105,6 +108,7 @@ export default {
             }
 
             return false;
+            // return false;
           },
         },
       ],

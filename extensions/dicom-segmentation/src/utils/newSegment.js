@@ -43,8 +43,13 @@ export default async function newSegment(
   enabledSeries,
   currentDisplaySet,
   enabledSeriesMeta,
-  callback
+  callback,
+  semiautomatic = false,
+  activeLabelMaps3D = undefined,
 ) {
+
+  var algoType = semiautomatic === false ? "MANUAL" : "SEMIAUTOMATIC";
+  var nameSeg = semiautomatic === false ? "New" : "XNat Interpolation";
 
   const uiModalService = UIModalService.create({});
   const dcmjs = require('dcmjs')
@@ -79,13 +84,19 @@ export default async function newSegment(
 
     derivated = setNumberOfFrames(derivated, numberOfFrames);
     derivated.dataset.ContentDescription = description;
-    derivated.dataset.SeriesDescription = "SEG "+ description +' - Empty'
+
+    derivated.dataset.SeriesDescription =
+        semiautomatic === false ?
+        "SEG "+ description +' - Empty' :
+        "SEG - XNAT Interpolation";
 
     let rgbcolor = hexToRgb(color);
     rgbcolor = [ rgbcolor.r/255, rgbcolor.g/255, rgbcolor.b/255];
     const recommendedCIELabValues = dcmjs.data.Colors.rgb2DICOMLAB(rgbcolor);
 
     derivated.dataset.InstanceNumber=1;
+
+
     const segment =  {
              SegmentedPropertyCategoryCodeSequence: {
                   CodeValue: "123037004",
@@ -95,7 +106,7 @@ export default async function newSegment(
              SegmentNumber: 1,
              SegmentLabel: name,
              SegmentDescription: description,
-             SegmentAlgorithmType: "MANUAL",
+             SegmentAlgorithmType: algoType,
              SegmentAlgorithmName: "Unknown Source",
              RecommendedDisplayCIELabValue: [ recommendedCIELabValues[0],
                           recommendedCIELabValues[1], recommendedCIELabValues[2]],
@@ -112,7 +123,7 @@ export default async function newSegment(
       referencedFrameNumbers.push(instanceNumber);
     }
 
-    console.log(enabledSeries)
+    // console.log(enabledSeries)
 
     const emptyArray = new Uint16Array(
       derivated.dataset.Columns * derivated.dataset.Rows * derivated.dataset.NumberOfFrames
@@ -120,8 +131,16 @@ export default async function newSegment(
 
     // console.log(derivated.dataset.Columns, derivated.dataset.Rows, derivated.dataset.NumberOfFrames)
     // console.log(emptyArray)
+    const baseArray =
+      activeLabelMaps3D !== undefined ?
+      new Uint16Array(activeLabelMaps3D.buffer) :
+      emptyArray;
 
-    const packedarray = dcmjs.data.BitArray.pack(emptyArray)
+
+
+    // console.log(baseArray, dcmjs.data.BitArray.pack(emptyArray))
+    // console.log("Resultat test ? ", activeLabelMaps3D !== undefined)
+    var packedarray = dcmjs.data.BitArray.pack(baseArray);
 
     // console.log(packedarray)
     addSegment(segment, derivated, packedarray, referencedFrameNumbers)
@@ -158,7 +177,7 @@ export default async function newSegment(
     content: SegmentationLabelForm,
     title: 'Create new segmentation',
     contentProps: {
-      name: 'New',
+      name: nameSeg,
       description: '',
       color:'#a45e7e',
       onSubmit: submit,

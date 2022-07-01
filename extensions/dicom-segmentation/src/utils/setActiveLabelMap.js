@@ -23,7 +23,7 @@ export default async function setActiveLabelmap(
     console.error(err.message);
   }
 ) {
-  
+
   const studyMetadata = studyMetadataManager.get(
     referencedDisplaySet.StudyInstanceUID
   );
